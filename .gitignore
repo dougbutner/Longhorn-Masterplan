@@ -1,0 +1,25 @@
+# Node / Vite
+node_modules/
+dist/
+.vite/
+.cache/
+*.log
+.DS_Store
+
+# Generated data is committed as a snapshot; rebuilt by frontend/scripts/build-plan.ts on every dev/build
+
+# Flavors
+flavors/*/upstream/
+flavors/*/build/
+
+# TS build info
+*.tsbuildinfo
+
+# Editor
+.vscode/
+.idea/
+
+# Env
+.env
+.env.*
+!.env.example
