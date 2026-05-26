@@ -417,14 +417,14 @@
   .lh-horn-accent__img {
     position: absolute;
     top: 50%;
-    left: -42%;
-    width: 165vw;
+    left: 50%;
+    width: 150vw;
     min-width: 1200px;
     max-width: none;
     height: auto;
     opacity: 0.2;
     mix-blend-mode: lighten;
-    transform: translateY(-50%);
+    transform: translate(-50%, -50%);
     user-select: none;
   }
 }
