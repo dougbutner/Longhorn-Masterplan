@@ -14,9 +14,10 @@ const REPO_URL = "https://github.com/dougbutner/Longhorn-Masterplan";
 export default function App() {
   const nodes = planData as PlanNode[];
   const contributors = contributorsData as Contributors;
+  const rootId = useMemo(() => nodes.find((n) => n.parent === null)?.id ?? "longhorn", [nodes]);
 
   const { ready, info: session, signIn, signOut } = useSession();
-  const [selectedId, setSelectedId] = useState<string | undefined>(undefined);
+  const [selectedId, setSelectedId] = useState<string | undefined>(rootId);
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [filterTag, setFilterTag] = useState<string | undefined>(undefined);
 
@@ -31,7 +32,7 @@ export default function App() {
 
   const visibleNodes = useMemo<PlanNode[]>(() => {
     if (!filterTag) return nodes;
-    return nodes.filter((n) => n.tags.includes(filterTag));
+    return nodes.filter((n) => n.parent === null || n.tags.includes(filterTag));
   }, [nodes, filterTag]);
 
   const selected = useMemo<PlanNode | undefined>(

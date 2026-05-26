@@ -17,7 +17,8 @@ export function NodePanel({ node, contributors, session, onClose, onClaim, onOpe
     return (
       <aside className="w-[420px] shrink-0 border-l border-slate-800 bg-slate-900/60 p-6 hidden md:block">
         <p className="text-slate-400 text-sm">
-          Click any node to view its component spec. Double-click to collapse / expand its subtree.
+          Click any feature to view its user story, problem, solution, and the live contract code it mirrors.
+          Double-click to collapse or expand its subtree.
         </p>
       </aside>
     );

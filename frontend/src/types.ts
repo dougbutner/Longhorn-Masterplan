@@ -1,15 +1,26 @@
 export type Status = "not_started" | "in_progress" | "review" | "done";
 
+export interface PlanSource {
+  path: string;
+  url?: string;
+  exists: boolean;
+  language: string;
+}
+
 export interface PlanNode {
   id: string;
   title: string;
+  parent: string | null;
   status: Status;
   progress: number;
   owners: string[];
-  depends_on: string[];
   tags: string[];
+  order: number;
+  source?: PlanSource;
   body: string;
   file: string;
+  depth: number;
+  children: string[];
 }
 
 export interface Contributor {

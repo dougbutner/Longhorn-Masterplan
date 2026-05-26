@@ -1,323 +1,444 @@
 [
   {
-    "id": "chain-passkey-flow",
-    "title": "Chain & passkey UX flow",
-    "status": "not_started",
-    "progress": 10,
-    "owners": [
-      "annie"
+    "id": "longhorn",
+    "title": "Longhorn",
+    "parent": null,
+    "status": "in_progress",
+    "progress": 20,
+    "owners": [],
+    "tags": [
+      "release"
     ],
-    "depends_on": [
-      "flavor-annie",
+    "order": 0,
+    "body": "## User Story\n\nAs a builder and as a user, I want a chain that keeps everything I already love about Antelope (12-character accounts, predictable permissions, subjective resources, mature WASM contracts) and removes the few rough edges that block normal-person onboarding and modern token economics.\n\n## Problem Statement\n\nAntelope is the most production-tested smart-contract base most people have never heard of. The friction points that keep it niche are: accounts must exist before they can receive tokens, no native passkey/WebAuthn, no first-class KV, no native reflection/governance economics, and DEX/perp mechanics aren't standardized at the protocol level.\n\n## Solution Statement\n\nLonghorn is a low-breakage release that ships every divergence as an additive overlay: lazy accounts, passkeys, an enhanced resource model, KV storage, richer events, reflection-backed tokens, fractal-style governance, native DEX/perp mechanics, and consensus tweaks — while preserving binary compatibility with existing CDT-compiled contracts.\n\n## Reference Contracts\n\n- [`AntelopeIO/reference-contracts`](https://github.com/AntelopeIO/reference-contracts) — base for `eosio.system`, `eosio.token`, `eosio.boot`.\n- [`AntelopeIO/spring`](https://github.com/AntelopeIO/spring) — node software with Savanna finality.\n- [`AntelopeIO/cdt`](https://github.com/AntelopeIO/cdt) — contract dev toolkit.\n\n## Implementation Steps\n\n1. Ship retained-core surface (account names, permissions, subjective resources, WASM/CDT baseline) unchanged.\n2. Layer divergences in order: lazy accounts → programmable permissions → resource subsidy → KV → events → custom system contracts → reflection tokens → fractal governance → DEX/perps → consensus tweaks.\n3. Stand up Jungle 4 as the integration testbed; validate every divergence there before promoting to mainnet.\n4. Mirror real contract source into every feature node on this site so progress always reflects the code.",
+    "file": "masterplan/longhorn.md",
+    "depth": 0,
+    "children": [
+      "retained-core",
+      "lazy-accounts",
       "programmable-permissions",
-      "lazy-account-materialization"
-    ],
-    "tags": [
-      "chain",
-      "ux",
-      "passkey"
-    ],
-    "body": "# Chain & passkey UX flow\n\nThe North Star UX for Annie. A new user never sees a seed phrase, never funds RAM up-front, and never deals with a memo.\n\n## Flow\n\n1. **Longhorn wallet creates a passkey** on the user's device. The wallet shows the user their new account name (key-derived), e.g. `EOS4vJ9JU1bJe7tPfZgpxpV3h`.\n2. **User goes to their CEX** and transfers EOS / Annie tokens to `EOS4vJ9JU1bJe7tPfZgpxpV3h`.\n   - Critically: **no memo required**. The destination string *is* the account.\n3. **First on-chain action**: at some later moment, the user signs anything from Longhorn wallet using `EOS4vJ9JU1bJe7tPfZgpxpV3h@active`. The chain:\n   - **Materializes** the account on first action (see `lazy-account-materialization.md`).\n   - Binds the **passkey** as the `active` authority (see `programmable-permissions.md`).\n   - Bills the account from the existing balance (see `enhanced-resource-model.md`).\n4. **Done.** The user is signing on chain without ever having \"opened\" an account.\n\n## Properties\n\n- **No memo** — bridges and CEXes are well-trained on plain account-name destinations.\n- **No seed** — WebAuthn keys live in secure enclave / passkey provider.\n- **No pre-funding cost** — billing happens *from* the inbound transfer.\n- **Stateless onboarding** — the chain is the database; no waitlist.\n\n## Touchpoints\n\n- Wallet UX: Longhorn wallet (out of scope here; specified separately).\n- Contract logic: `eosio.system::on_transfer` (lazy create) + `eosio.passkey::auth_passkey`.\n- Frontend: the masterplan UI's Wharfkit sign-in is the *desktop* equivalent of this same flow.",
-    "file": "masterplan/chain-passkey-flow.md"
+      "enhanced-resources",
+      "kv-storage",
+      "events-indexing",
+      "custom-system-contracts",
+      "reflection-tokens",
+      "fractal-governance",
+      "dex-mechanics",
+      "consensus-tweaks",
+      "jungle4-testing"
+    ]
   },
   {
-    "id": "collaboration-flow",
-    "title": "Collaboration flow",
-    "status": "not_started",
-    "progress": 5,
+    "id": "retained-core",
+    "title": "Retained Core (Low Breakage)",
+    "parent": "longhorn",
+    "status": "in_progress",
+    "progress": 80,
     "owners": [],
-    "depends_on": [
-      "pr-governance",
-      "vaulta-auth"
-    ],
     "tags": [
-      "governance",
-      "process"
+      "release",
+      "retained"
     ],
-    "body": "# Collaboration flow\n\nHow a contributor goes from \"I want to help\" → merged code.\n\n## 1. Add yourself\n\nOpen `CONTRIBUTORS.json` and add your entry with a vaulta name, github handle, and a color hex.\n\n```json\n\"yourname\": { \"color\": \"#a855f7\", \"github\": \"yourname\", \"vaulta\": \"yourname.evm\" }\n```\n\nPR title: `[yourname] add contributor entry`.\n\n## 2. Sign in to the UI\n\n`pnpm dev` in `/frontend`, click **Sign in**, pick Anchor or WebAuthn. Activate lights up; your pill appears top-right.\n\n## 3. Claim a node\n\nFind a node in the map. Click → side panel → **Claim**. The UI opens a PR draft titled `[yourname] claim <node-id>` that adds your vaulta to that file's `owners` and bumps `status` to `in_progress`.\n\n## 4. Build the flavor work\n\nIf you're working on a chain change, it lives under `flavors/Annie/contracts/<contract>/`. Reference the upstream you forked from in your PR body so reviewers can diff against it.\n\n## 5. Update progress as you ship\n\nBump the `progress` value in the masterplan MD's frontmatter. The map turns greener. Open another PR `[yourname] progress <node-id>: NN%`.\n\n## 6. Review\n\nThe CODEOWNERS for the file you touched are auto-requested. PRs land via squash merge so the activity feed stays clean.",
-    "file": "masterplan/collaboration-flow.md"
+    "order": 0,
+    "body": "## User Story\n\nAs a contract author who already ships on Antelope, I want my existing CDT-compiled contracts to keep working on Longhorn with zero changes.\n\n## Problem Statement\n\nForks frequently break the surface contracts depend on (intrinsics, ABI shape, signature recovery, account-name rules). Every break costs the whole ecosystem.\n\n## Solution Statement\n\nLonghorn explicitly preserves the four pillars contracts depend on — account names, the permission system, the subjective resource model, and the WASM + CDT runtime — and only extends them additively.\n\n## Reference Contracts\n\n- [`AntelopeIO/reference-contracts`](https://github.com/AntelopeIO/reference-contracts) — base.\n- [`AntelopeIO/cdt`](https://github.com/AntelopeIO/cdt) — toolchain.\n\n## Implementation Steps\n\n1. Pin Spring + CDT versions used as the baseline.\n2. Run the reference-contracts test suite against every Longhorn build; gate releases on a clean pass.\n3. Document every addition as \"additive only\" with a compatibility note in the release notes.\n4. Track each pillar as a child node so progress is visible.",
+    "file": "masterplan/retained-core.md",
+    "depth": 1,
+    "children": [
+      "retained-account-names",
+      "retained-permissions",
+      "retained-resources",
+      "retained-wasm-cdt"
+    ]
   },
   {
-    "id": "consensus-protocol-tweaks",
-    "title": "Consensus & protocol tweaks",
-    "status": "not_started",
-    "progress": 0,
-    "owners": [
-      "annie"
-    ],
-    "depends_on": [
-      "flavor-annie"
-    ],
-    "tags": [
-      "chain",
-      "consensus"
-    ],
-    "body": "# Consensus & protocol tweaks\n\nSurface-level changes only — contract authors should see no behavior change.\n\n## Faster finality\n\n- Track `AntelopeIO/spring`'s **Savanna** finality work and pin to a known-good release.\n- Optional pre-confirmation gossip among BPs for sub-second user-visible latency.\n\n## IBC\n\n- Adopt the latest reference IBC modules; ship a default light-client config so masterplan UIs can verify cross-chain claims.\n\n## dPoS tuning\n\n- Vote-decay curve tuned for higher participation.\n- BP schedule jitter to make block-time more uniform under load.\n\n## What's intentionally *not* changed\n\n- Action format, transaction format, signature recovery (beyond adding passkey kind byte).\n- WASM intrinsics surface — CDT-compiled contracts from upstream remain ABI-compatible.",
-    "file": "masterplan/consensus-protocol-tweaks.md"
-  },
-  {
-    "id": "contributor-colors",
-    "title": "Contributor colors",
-    "status": "not_started",
-    "progress": 10,
+    "id": "lazy-accounts",
+    "title": "Lazy Account Materialization",
+    "parent": "longhorn",
+    "status": "in_progress",
+    "progress": 15,
     "owners": [],
-    "depends_on": [
-      "pr-governance"
-    ],
     "tags": [
-      "frontend",
-      "governance"
+      "divergence",
+      "onboarding"
     ],
-    "body": "# Contributor colors\n\nEach vaulta name is bound to a hue. The UI uses the color to:\n\n- Stroke the node a contributor most recently pushed to.\n- Tint their name pill in the header.\n- Color-band entries in the activity sidebar (\"who pushed what\").\n\n## Source of truth\n\n`CONTRIBUTORS.json` at the repo root:\n\n```json\n{\n  \"annie\":       { \"color\": \"#e11d48\", \"github\": \"annie\",       \"vaulta\": \"annie.evm\" },\n  \"dougbutner\":  { \"color\": \"#0ea5e9\", \"github\": \"dougbutner\",  \"vaulta\": \"doug.evm\" }\n}\n```\n\n## Who-pushed-what\n\nThe frontend reads the merged-PR log (`git log --pretty=...`) baked into `frontend/src/data/activity.json` at build time. Each entry: `{ sha, vaulta, files: [...], timestamp }`. Side panel surfaces \"Last pushed by `annie` 2h ago\" with the color.\n\n## Picking colors\n\n- Choose distinct hues > 30° apart on OKLCH; avoid red/green confusion for accessibility.\n- Document the choice next to your name when adding yourself in `CONTRIBUTORS.json`.",
-    "file": "masterplan/contributor-colors.md"
-  },
-  {
-    "id": "custom-system-contracts",
-    "title": "Custom system contracts",
-    "status": "not_started",
-    "progress": 10,
-    "owners": [
-      "annie"
-    ],
-    "depends_on": [
-      "flavor-annie",
-      "lazy-account-materialization",
-      "programmable-permissions"
-    ],
-    "tags": [
-      "chain",
-      "contracts"
-    ],
-    "body": "# Custom system contracts\n\nAnnie's privileged contracts extend stock Antelope without rewriting them.\n\n## Contracts\n\n| Contract        | Role | Derived from |\n|-----------------|------|--------------|\n| `eosio.system`  | core resources, BP voting, account ops | `AntelopeIO/reference-contracts` + WAX & ENF |\n| `eosio.token`   | fungible tokens + `on_transfer` lazy hook | `AntelopeIO/reference-contracts` |\n| `eosio.boot`    | bootstrap (genesis) | `AntelopeIO/reference-contracts` |\n| `eosio.proton`  | identity / `@names` / KYC verification | `XPRNetwork/proton.contracts` |\n| `eosio.passkey` | programmable permissions, WebAuthn auth | Tonomy permissions + new code |\n| `eosio.kv`      | KV helpers, TS table sugar | `XPRNetwork/ts-smart-contracts` |\n| `eosio.events`  | event registry + emit                  | new |\n| `eosio.subsidy` | free-tier CPU/NET billing               | new |\n\n## Privileged actions (excerpt)\n\n```cpp\n// eosio.proton\nvoid verify_identity(name account, bytes proof);\nvoid set_verified(name account, bool status);\n\n// eosio.system\nvoid create_account(name creator, name newacc, public_key key, bool lazy = true);\nvoid on_transfer(name from, name to, asset quantity, std::string memo);\n\n// eosio.passkey\nvoid set_permission_logic(name account, name permission, std::vector<uint8_t> wasm_logic);\nvoid auth_passkey(name account, signature sig, bytes data);\n```\n\n## Build\n\nEach contract sits in `flavors/Annie/contracts/<name>/`. The `flavors/Annie/scripts/build.sh` script invokes CDT for each contract and outputs WASM + ABI to `flavors/Annie/build/`.",
-    "file": "masterplan/custom-system-contracts.md"
-  },
-  {
-    "id": "d3-progress-map",
-    "title": "D3 progress map",
-    "status": "in_progress",
-    "progress": 45,
-    "owners": [
-      "dougbutner"
-    ],
-    "depends_on": [
-      "frontend-overview"
-    ],
-    "tags": [
-      "frontend",
-      "d3",
-      "viz"
-    ],
-    "body": "# D3 progress map\n\nA **force-directed graph** of the masterplan. Each `masterplan/*.md` becomes one node; each `depends_on` becomes one directed edge.\n\n## Visual encoding\n\n| Channel  | Meaning |\n|----------|---------|\n| Fill     | `progress` mapped through `d3.interpolateRgb(\"#f97316\", \"#22c55e\")` (orange → green) |\n| Radius   | `12 + (progress / 100) * 18` |\n| Stroke   | Last pusher color from `CONTRIBUTORS.json` |\n| Halo     | Pulses while `status === \"in_progress\"` |\n| Icon     | `done` ✓, `review` ◐, `in_progress` ◔, `not_started` ○ |\n\n## Interactions\n\n- **Click** → opens the markdown body in the side panel.\n- **Double-click** → toggles the node's subtree expand/contract.\n- **Drag** → repositions the node (sticky after release).\n- **Hover** → highlights direct ancestors + descendants.\n- **`F`** → fullscreen toggle.\n- **`E` / `C`** → expand-all / collapse-all.\n\n## Implementation pointers\n\n- `frontend/src/viz/ProgressMap.tsx` — React wrapper, owns refs.\n- `frontend/src/viz/forceLayout.ts` — `d3-force` simulation (charge -250, link distance 90).\n- `frontend/src/viz/colorScale.ts` — interpolators + contributor color lookup.\n- Resize observer keeps the SVG sized to its container, including fullscreen.",
-    "file": "masterplan/d3-progress-map.md"
-  },
-  {
-    "id": "enhanced-resource-model",
-    "title": "Enhanced resource model",
-    "status": "not_started",
-    "progress": 5,
-    "owners": [
-      "annie"
-    ],
-    "depends_on": [
-      "flavor-annie",
-      "lazy-account-materialization"
-    ],
-    "tags": [
-      "chain",
-      "resources"
-    ],
-    "body": "# Enhanced resource model\n\nKeep the subjective CPU/NET/RAM model contracts depend on, but smooth the new-user cliff and tighten staking dynamics.\n\n## Surface\n\n```cpp\n// eosio.system\nvoid delegatebw(name from, name receiver, asset stake_net, asset stake_cpu);\nvoid buyrambytes(name payer, name receiver, uint32_t bytes);\n\n// Annie additions\nvoid grant_free_tier(name receiver, uint32_t cpu_ms, uint32_t net_bytes); // privileged\nvoid set_subsidy_curve(uint8_t curve_id, std::vector<uint64_t> params);   // bp-governed\n```\n\n## Free tier\n\n- Newly materialized accounts get a small CPU / NET allotment paid by `eosio.subsidy`.\n- Allotment scales with current chain load; it can drop to zero when the chain is hot.\n- Implementation: a token bucket keyed by account, refilled every block, capped per account.\n\n## Tuned staking\n\n- Existing `delegatebw` semantics preserved.\n- New: continuous redelegation (no 3-day unstake delay for sub-threshold amounts).\n- Curves stored on chain; tuneable via BP vote without a hard fork.\n\n## Compatibility\n\nContracts that read CPU/NET/RAM via existing intrinsics see no change. The free tier looks like \"the user happens to have a bit of stake\".",
-    "file": "masterplan/enhanced-resource-model.md"
-  },
-  {
-    "id": "events-indexing",
-    "title": "Events & indexing",
-    "status": "not_started",
-    "progress": 5,
-    "owners": [
-      "annie"
-    ],
-    "depends_on": [
-      "flavor-annie"
-    ],
-    "tags": [
-      "chain",
-      "indexing"
-    ],
-    "body": "# Events & indexing\n\nAntelope's history is action-traces + inline-actions. Annie adds an explicit **event** primitive so indexers don't have to reverse-engineer state changes from action data.\n\n## Surface\n\n```cpp\n// any contract\nvoid emit_event(name event_type, bytes data);\n```\n\n- Events are recorded in the block as a separate vector alongside action traces.\n- Schema is described by `eosio.events::register_schema(name event_type, std::string abi_fragment)`.\n\n## Why\n\n- Existing indexers (Hyperion, Antelope-Eosio-Indexer, Dfuse) currently match on action names + memo conventions. Events make schema explicit.\n- KV reads inside contracts don't show up in action traces; events let contracts say \"this state changed\" directly.\n\n## Off-chain\n\n- `nodeos` ships a websocket of events filtered by `event_type` / `account`.\n- Indexers can subscribe instead of replaying full history when they only care about a subset.\n\n## Compatibility\n\n- Strict superset. Old contracts emit no events; old indexers ignore them.",
-    "file": "masterplan/events-indexing.md"
-  },
-  {
-    "id": "flavor-annie",
-    "title": "Annie flavor overview",
-    "status": "in_progress",
-    "progress": 25,
-    "owners": [
-      "annie"
-    ],
-    "depends_on": [],
-    "tags": [
-      "chain",
-      "flavor",
-      "annie"
-    ],
-    "body": "# Annie — first complete build\n\n**Annie** is the inaugural flavor under `/flavors`. It is a **low-breakage Antelope fork** that retains the parts of Antelope developers depend on while pulling in the best ideas from neighboring forks.\n\n## Retained core (low breakage)\n\n- 12-character account names (plus support for human-readable `@names` and hashed/long accounts).\n- Permission system kept and extended for programmability.\n- Subjective resource model (CPU/NET/RAM), mostly transparent to contracts.\n- WASM + CDT baseline for maximum contract compatibility.\n\n## Divergences (Annie's value-add)\n\n| Feature | Spec node |\n|---|---|\n| Lazy account materialization | [`lazy-account-materialization.md`](./lazy-account-materialization.md) |\n| Programmable permissions + native passkeys | [`programmable-permissions.md`](./programmable-permissions.md) |\n| Enhanced resource model (free tier, better staking) | [`enhanced-resource-model.md`](./enhanced-resource-model.md) |\n| KV storage alongside multi-index | [`kv-storage-model.md`](./kv-storage-model.md) |\n| Richer events / indexing primitives | [`events-indexing.md`](./events-indexing.md) |\n| Custom system contracts (identity, lazy, passkey) | [`custom-system-contracts.md`](./custom-system-contracts.md) |\n| Faster finality + IBC tweaks | [`consensus-protocol-tweaks.md`](./consensus-protocol-tweaks.md) |\n\n## Build layout\n\n```\nflavors/Annie/\n  README.md                 # quick-start\n  contracts/\n    eosio.system/           # Annie overlay on AntelopeIO/reference-contracts\n    eosio.token/\n    eosio.boot/\n    eosio.proton/           # identity / lazy accounts (from XPRNetwork)\n    eosio.passkey/          # programmable permissions / WebAuthn (from Tonomy)\n    eosio.kv/               # KV storage helpers (from XPRNetwork ts-smart-contracts)\n    eosio.events/           # event emitter (new)\n  upstream/                 # populated by flavors/scripts/pull-references.sh\n    antelope-reference-contracts/\n    spring/\n    cdt/\n    wax-system-contracts/\n    proton.contracts/\n    ts-smart-contracts/\n    wire-system-contracts/\n    vaulta-system-contracts/\n    eos-system-contracts/\n    tonomy-id/\n    infrablockchain/\n  scripts/\n    build.sh                # builds each contract via CDT\n    diff-upstream.sh        # shows divergence vs each upstream\n```\n\n## Status\n\nThis file tracks the rollup. Each contract has its own README in `flavors/Annie/contracts/<name>/` with status, owners, and the upstream(s) it derives from.",
-    "file": "masterplan/flavor-annie.md"
-  },
-  {
-    "id": "frontend-overview",
-    "title": "Frontend overview",
-    "status": "in_progress",
-    "progress": 35,
-    "owners": [
-      "dougbutner"
-    ],
-    "depends_on": [],
-    "tags": [
-      "frontend"
-    ],
-    "body": "# Frontend overview\n\nThe frontend in `/frontend` is the masterplan's interactive dashboard. It is intentionally minimal:\n\n- **Vite** dev server, **React 18 + TypeScript**, **Tailwind** for styling.\n- A single page renders a **D3 force-directed graph** of the masterplan nodes.\n- A side panel shows the markdown body of whichever node is clicked.\n- Top-bar shows: chain selector (EOS / Vaulta), sign-in button, fullscreen toggle, expand/collapse-all, contributor legend.\n\n## Responsibilities\n\n1. Load `src/data/plan.json` (generated from `masterplan/*.md` frontmatter).\n2. Load `src/data/contributors.json` (generated from `CONTRIBUTORS.json`).\n3. Mount Wharfkit `SessionKit` and expose a sign-in CTA.\n4. Provide a menu of direct user actions once signed in.\n\n## Non-goals\n\n- No backend; everything is static-hostable (Cloudflare Pages, GitHub Pages).\n- No realtime sync beyond reloading `plan.json` when the repo updates.",
-    "file": "masterplan/frontend-overview.md"
-  },
-  {
-    "id": "kv-storage-model",
-    "title": "KV storage model",
-    "status": "not_started",
-    "progress": 5,
-    "owners": [
-      "annie"
-    ],
-    "depends_on": [
-      "flavor-annie"
-    ],
-    "tags": [
-      "chain",
-      "storage"
-    ],
-    "body": "# KV storage model\n\nA first-class key-value store alongside Antelope's existing multi-index tables.\n\n## TypeScript surface (XPRNetwork-style)\n\n```ts\n@table(\"kvstore\")\nclass KVStore {\n  @primaryKey\n  key: Bytes;\n\n  value: Bytes;\n\n  @secondary\n  owner: Name;\n}\n```\n\n## C++ surface\n\n```cpp\nstruct [[eosio::table]] kvstore {\n    bytes key;\n    bytes value;\n    name  owner;\n\n    uint64_t primary_key() const { return std::hash<bytes>{}(key); }\n};\n```\n\n## Why both?\n\n- The TS-style decorator API gives a modern developer experience (XPRNetwork has shown it works at scale).\n- The C++ struct keeps wire-format parity with reference contracts.\n\n## Use cases\n\n- Identity bindings (`vaulta name → passkey set`).\n- Inbound transfer routing for lazy materialization (`incoming_key_string → metadata`).\n- Arbitrary contract state without designing a multi-index from scratch.\n\n## Cost\n\nSame RAM-billing model as multi-index. Per-entry overhead lower because no secondary-index trees by default; opt-in `@secondary` adds them.",
-    "file": "masterplan/kv-storage-model.md"
-  },
-  {
-    "id": "lazy-account-materialization",
-    "title": "Lazy account materialization",
-    "status": "not_started",
-    "progress": 10,
-    "owners": [
-      "annie"
-    ],
-    "depends_on": [
-      "flavor-annie"
-    ],
-    "tags": [
-      "chain",
-      "contracts"
-    ],
-    "body": "# Lazy account materialization\n\nTransfers to a *non-existent* account (key-derived or `@username`) auto-create that account on the first action, billed from the transferred balance.\n\n## Contract surface\n\n```cpp\n// eosio.system\nvoid create_account(name creator, name newacc, public_key key, bool lazy = true);\n\n// eosio.token (notify handler)\nvoid on_transfer(name from, name to, asset quantity, std::string memo) {\n    // 1. if `to` doesn't exist:\n    //    a. derive account name from `to` (it IS the public key form)\n    //    b. call create_account(self, to, key, lazy=true)\n    //    c. charge the materialization fee from `quantity`\n    // 2. credit the remaining quantity to `to`\n}\n```\n\n## Open design questions\n\n- How to encode \"the destination is a public key, not a name\". Proposal: detect `EOS*` / `PUB_*` prefix on `to` and route to a `materialize` action. The user pastes the public-key string as the account name.\n- Long account names — chain stores a `hash → key` table so transfers to long `@names` still resolve in 64 bits internally.\n- Reaping rules for accounts that never act after materialization (no rent until first use).\n\n## References\n\n- XPRNetwork lazy-account precedent (see `flavors/Annie/upstream/proton.contracts/`).\n- Tonomy passkey-only account flow.",
-    "file": "masterplan/lazy-account-materialization.md"
-  },
-  {
-    "id": "menu-actions",
-    "title": "Menu actions",
-    "status": "not_started",
-    "progress": 0,
-    "owners": [],
-    "depends_on": [
-      "vaulta-auth",
-      "d3-progress-map"
-    ],
-    "tags": [
-      "frontend",
-      "ux"
-    ],
-    "body": "# Menu actions\n\nThe top-right menu is the primary \"direct interaction\" surface for signed-in users. All actions are deep-linked so they can be hit from anywhere.\n\n## Always-available\n\n- **Fullscreen** (`F`)\n- **Expand all** (`E`)\n- **Collapse all** (`C`)\n- **Filter by tag** (modal multi-select; chips along the top)\n- **Filter by contributor** (legend chips toggle)\n\n## Requires sign-in (Activate)\n\n- **Claim node** — sets `owners += [<actor>]` and opens PR `[<actor>] claim <node-id>`.\n- **Update progress** — slider in side panel, commits to a PR `[<actor>] progress <node-id>: NN%`.\n- **Open issue** — pre-fills repo issue with node context.\n- **Open PR template** — copies a freshly composed PR body to clipboard.\n- **Sign-out** — clears Wharfkit session and `localStorage`.\n\n## Implementation\n\n`frontend/src/components/MenuBar.tsx`. Items disabled with a tooltip (\"Sign in with Vaulta to claim nodes\") rather than hidden, so the surface is discoverable.",
-    "file": "masterplan/menu-actions.md"
-  },
-  {
-    "id": "pr-governance",
-    "title": "PR governance & [vaultaname]",
-    "status": "in_progress",
-    "progress": 60,
-    "owners": [
-      "dougbutner"
-    ],
-    "depends_on": [],
-    "tags": [
-      "governance"
-    ],
-    "body": "# PR governance & [vaultaname]\n\nEvery pull request to this repo must:\n\n1. **Start with `[<vaultaname>]`** in the title, where `<vaultaname>` is a known key in `CONTRIBUTORS.json`.\n   - Examples: `[annie] add lazy account materialization`, `[dougbutner] wire d3 force layout`.\n2. Pass the `.github/workflows/pr-vaulta-name.yml` CI check, which:\n   - Parses the title, validates the prefix against `CONTRIBUTORS.json`.\n   - Adds a colored label (e.g. `vaulta:annie`) for the dashboard.\n3. Reference at least one masterplan node id in the body (e.g. `Updates: d3-progress-map, menu-actions`) so the activity feed can link the PR to nodes.\n\n## Why a name token, not the GitHub login?\n\nThe Vaulta name is the on-chain identity — the same identifier that signs masterplan UI actions. Tying PR provenance to it lets us:\n\n- Render contributors consistently in the map (same color as the in-app pill).\n- Eventually accept signed PR bodies (Wharfkit-signed proofs) for permissionless contribution.\n\n## Files\n\n- `.github/PULL_REQUEST_TEMPLATE.md` — the template hands users `[<your-vaulta-name>]` skeleton.\n- `.github/workflows/pr-vaulta-name.yml` — enforces the rule.\n- `.github/CODEOWNERS` — routes review to the right humans.",
-    "file": "masterplan/pr-governance.md"
+    "order": 1,
+    "source": {
+      "path": "flavors/Annie/contracts/eosio.system/src/eosio.system.cpp",
+      "url": "https://github.com/dougbutner/Longhorn-Masterplan/blob/main/flavors/Annie/contracts/eosio.system/src/eosio.system.cpp",
+      "exists": true,
+      "language": "cpp"
+    },
+    "body": "## User Story\n\nAs a new user, I create a passkey in Longhorn wallet, see my new account `EOS4vJ9JU1bJe7tPfZgpxpV3h`, fund it from a CEX with **no memo**, and start signing transactions. The chain materializes the account on my first action and bills it from the inbound balance.\n\n## Problem Statement\n\nAntelope requires accounts to exist (with RAM allocated) before they can receive tokens. CEXes can't send to non-existent accounts. Memo-based workarounds break under load and confuse users. This is the single biggest onboarding-tax of the entire ecosystem.\n\n## Solution Statement\n\nTransfers to a non-existent destination — whether a key-encoded string (`EOS4vJ9JU1bJe7tPfZgpxpV3h`) or an `@username` — auto-create the account on first action. The materialization fee is deducted from the inbound balance; RAM is billed from the incoming amount; the public key is bound to `active`.\n\n## Reference Contracts\n\n- [`AntelopeIO/reference-contracts`](https://github.com/AntelopeIO/reference-contracts) — `eosio.system::newaccount`, `eosio.token::transfer` notify.\n- [`XPRNetwork/proton.contracts`](https://github.com/XPRNetwork/proton.contracts) — lazy-account precedent.\n\n## Implementation Steps\n\n1. Extend `newaccount` with a `lazy: bool` flag; lazy accounts skip RAM pre-allocation.\n2. Add an `on_transfer` notify handler in `eosio.token` that detects a key-encoded `to`, derives the chain account from the key, and calls `newaccount(..., lazy=true)`.\n3. Charge a fixed materialization fee from the incoming `quantity` before crediting.\n4. Reserve a chain config for the maximum materialization fee and the key-derived account-name prefix.\n5. Test on Jungle 4 with a CEX-style transfer from a foreign account.\n\n## Full code snippet\n\n```cpp\n// eosio.system — Annie flavor scaffold.\n//\n// This file is intentionally minimal. The full reference implementation lives in\n//   flavors/Annie/upstream/antelope-reference-contracts/contracts/eosio.system/\n// after running flavors/scripts/pull-references.sh.\n//\n// Annie's divergences live here as small, auditable overlays.\n\n#include <eosio/eosio.hpp>\n#include <eosio/asset.hpp>\n#include <eosio/crypto.hpp>\n\nusing namespace eosio;\n\nCONTRACT system_contract : public contract {\npublic:\n   using contract::contract;\n\n   // Lazy-aware account creation. When lazy=true the chain materializes the\n   // account on first action instead of at create time.\n   ACTION newaccount(name creator, name newacc, public_key key, bool lazy /* = true */);\n\n   // Token notify-handler entry point. Auto-creates the destination account if\n   // `to` is a public-key string and does not yet exist on chain.\n   [[eosio::on_notify(\"eosio.token::transfer\")]]\n   void on_transfer(name from, name to, asset quantity, std::string memo);\n};\n\n```\n\n## Update with changes\n\nMirrored from [`flavors/Annie/contracts/eosio.system/src/eosio.system.cpp`](https://github.com/dougbutner/Longhorn-Masterplan/blob/main/flavors/Annie/contracts/eosio.system/src/eosio.system.cpp). Push to that file to update this snippet on the next build.\n",
+    "file": "masterplan/lazy-accounts.md",
+    "depth": 1,
+    "children": []
   },
   {
     "id": "programmable-permissions",
-    "title": "Programmable permissions + passkeys",
-    "status": "not_started",
+    "title": "Programmable Permissions + Passkeys",
+    "parent": "longhorn",
+    "status": "in_progress",
     "progress": 10,
-    "owners": [
-      "annie"
-    ],
-    "depends_on": [
-      "flavor-annie"
-    ],
+    "owners": [],
     "tags": [
-      "chain",
-      "contracts",
+      "divergence",
+      "auth",
       "passkey"
     ],
-    "body": "# Programmable permissions + native passkey support\n\nExtensible auth logic — permissions are evaluated by user-supplied WASM, and WebAuthn / passkey signatures are first-class on chain.\n\n## Contract surface\n\n```cpp\n// eosio.passkey\nvoid set_permission_logic(name account, name permission, std::vector<uint8_t> wasm_logic);\nvoid auth_passkey(name account, signature sig, bytes data);\n```\n\n## Design notes\n\n- **WASM permission programs** receive `(action, context)` and return `bool authorized`. The on-chain VM is the same WASM runtime used for contracts, sandboxed harder (no DB writes).\n- **WebAuthn keys** are stored alongside K1/R1 keys; the existing `permission_level_weight` carries an additional kind flag.\n- The `Longhorn wallet → passkey → first action → materialize` path described in `chain-passkey-flow.md` is implemented by `auth_passkey` + the lazy-create hook.\n\n## Compatibility\n\n- Existing keyed permissions keep working — programmable permissions are *additive*.\n- Off-chain tooling (history, indexers) must learn about the new sig type; we ship a `kind` byte ahead of the signature payload for forward compatibility.\n\n## References\n\n- Tonomy permissions library — `flavors/Annie/upstream/tonomy-id/`.\n- Web standards: WebAuthn level 2, COSE algs (ES256, EdDSA).",
-    "file": "masterplan/programmable-permissions.md"
+    "order": 2,
+    "source": {
+      "path": "flavors/Annie/contracts/eosio.passkey/src/eosio.passkey.cpp",
+      "url": "https://github.com/dougbutner/Longhorn-Masterplan/blob/main/flavors/Annie/contracts/eosio.passkey/src/eosio.passkey.cpp",
+      "exists": true,
+      "language": "cpp"
+    },
+    "body": "## User Story\n\nAs a user, I sign transactions on Longhorn with the same passkey I use to log into web apps — no seed phrase, no browser extension, no separate signer install.\n\n## Problem Statement\n\nAntelope authorities only natively support `K1` / `R1` keys. WebAuthn (the actual standard browsers and mobile OSes implement for passwordless auth) isn't a first-class citizen. Bolt-on signers exist but they're fragile and ecosystem-specific.\n\n## Solution Statement\n\nTwo complementary additions: (1) a sandboxed WASM \"permission program\" that any account can install to evaluate `(action, context) → bool`, and (2) native WebAuthn signature verification (`auth_passkey`) so a passkey can be a weighted entry in any authority — including `active` — alongside K1/R1 keys.\n\n## Reference Contracts\n\n- [`Tonomy-Foundation/Tonomy-ID`](https://github.com/Tonomy-Foundation/Tonomy-ID) — passkey + DID precedent.\n- [`AntelopeIO/reference-contracts`](https://github.com/AntelopeIO/reference-contracts) — authority + permission_level structures.\n\n## Implementation Steps\n\n1. Reserve a new `kind` byte for WebAuthn signatures in the wire format.\n2. Add `eosio.passkey::auth_passkey(account, sig, data)` action that verifies a WebAuthn assertion.\n3. Add `eosio.passkey::set_permission_logic(account, permission, wasm_logic)` action that stores a sandboxed WASM module evaluated during authorization.\n4. Allow the existing `authority` struct to reference a passkey credential descriptor (stored in `eosio.kv`).\n5. Ship a wallet integration so creating a Longhorn account creates a passkey by default.\n\n## Full code snippet\n\n```cpp\n// eosio.passkey — Annie flavor scaffold.\n//\n// Programmable permissions + native WebAuthn verification.\n\n#include <eosio/eosio.hpp>\n#include <eosio/crypto.hpp>\n\nusing namespace eosio;\n\nCONTRACT passkey_contract : public contract {\npublic:\n   using contract::contract;\n\n   ACTION setlogic(name account, name permission, std::vector<uint8_t> wasm_logic);\n   ACTION authpasskey(name account, signature sig, std::vector<char> data);\n};\n\n```\n\n## Update with changes\n\nMirrored from [`flavors/Annie/contracts/eosio.passkey/src/eosio.passkey.cpp`](https://github.com/dougbutner/Longhorn-Masterplan/blob/main/flavors/Annie/contracts/eosio.passkey/src/eosio.passkey.cpp). Push to that file to update this snippet on the next build.\n",
+    "file": "masterplan/programmable-permissions.md",
+    "depth": 1,
+    "children": []
   },
   {
-    "id": "reference-repos",
-    "title": "Reference repositories",
+    "id": "enhanced-resources",
+    "title": "Enhanced Resource Model",
+    "parent": "longhorn",
     "status": "in_progress",
-    "progress": 70,
-    "owners": [
-      "dougbutner"
-    ],
-    "depends_on": [
-      "flavor-annie"
-    ],
+    "progress": 10,
+    "owners": [],
     "tags": [
-      "chain",
-      "references"
+      "divergence",
+      "resources",
+      "onboarding"
     ],
-    "body": "# Reference repositories\n\nThe canonical upstreams Annie pulls from. `flavors/scripts/pull-references.sh` will clone these into `flavors/Annie/upstream/` so contributors can diff against them.\n\n## Core Antelope foundation (must-have)\n\n- **AntelopeIO/reference-contracts** — Official reference system contracts (`eosio.system`, `eosio.token`, `eosio.boot`). The primary base for any fork.\n- **AntelopeIO/spring** — Main Antelope node software (protocol implementation with Savanna consensus).\n- **AntelopeIO/cdt** — Contract Development Toolkit (C++ for smart contracts).\n\n## Major forks & custom system contracts\n\n- **worldwide-asset-exchange/wax-system-contracts** — WAX system contracts (perf / NFT-focused tweaks).\n- **XPRNetwork/proton.contracts** — Identity, lazy accounts, payments.\n- **XPRNetwork/ts-smart-contracts** — TypeScript smart contracts (KV storage, modern patterns).\n- **XPRNetwork/proton.token** — Token contract examples.\n- **Wire-Network/wire-system-contracts** — WIRE system contracts (universal transaction layer, deeper divergences).\n- **VaultaFoundation/system-contracts** — Vaulta-specific system contracts (sibling positioning reference).\n- **Tonomy-Foundation/Tonomy-ID** — Tonomy ID & governance (identity, passkeys, programmable permissions).\n\n## Additional\n\n- **eosnetworkfoundation/eos-system-contracts** — ENF-maintained system contracts (frequent updates).\n- **InfraBlockchain/infrablockchain** — Another Antelope fork with custom system contracts.\n\n## Strategy\n\nStart with **AntelopeIO/reference-contracts** as the base. Layer:\n\n- **XPRNetwork** for lazy accounts + identity.\n- **Tonomy** for passkeys / programmable permissions.\n- **WAX** for perf tuning hooks.\n- **WIRE** for the more aggressive protocol ideas (cherry-picked).\n- **Vaulta** for parity where it makes sense.\n\nEach contract under `flavors/Annie/contracts/<name>/README.md` declares its upstream lineage so we can keep diffs auditable.",
-    "file": "masterplan/reference-repos.md"
+    "order": 3,
+    "source": {
+      "path": "flavors/Annie/contracts/eosio.subsidy/README.md",
+      "url": "https://github.com/dougbutner/Longhorn-Masterplan/blob/main/flavors/Annie/contracts/eosio.subsidy/README.md",
+      "exists": true,
+      "language": "md"
+    },
+    "body": "## User Story\n\nAs a brand-new account, my first few transactions feel free — the chain underwrites me until I have skin in the game.\n\n## Problem Statement\n\nSubjective billing requires CPU/NET stake or PowerUp to transact. A freshly materialized account has neither, so the first action after onboarding hits a wall. That wall is the second-biggest onboarding tax after lazy accounts.\n\n## Solution Statement\n\nA privileged `eosio.subsidy` contract refills a per-account token bucket every block. Newly materialized accounts get an initial allotment large enough for their first ~10 actions; the bucket caps at a small per-block refill. Block producers tune the curves via a voted parameter — no hard fork needed.\n\n## Reference Contracts\n\n- [`AntelopeIO/reference-contracts`](https://github.com/AntelopeIO/reference-contracts) — `eosio.system::delegatebw`, `buyrambytes`.\n\n## Implementation Steps\n\n1. Stand up `eosio.subsidy` as a privileged contract.\n2. Implement `grant_free_tier(receiver, cpu_ms, net_bytes)` callable from `eosio.system::newaccount`.\n3. Token-bucket per account, refilled every block based on `set_curve(curve_id, params)`.\n4. Wire bucket lookup into CPU/NET accounting so contracts see \"the user has some stake\".\n5. BP vote action to update curves; no hard fork.\n\n## Full code snippet\n\n```md\n# eosio.subsidy (Annie)\n\nStatus: scaffolding\nUpstream: new\nUpstream-path: \n\n## Surface\n\n```cpp\nACTION grantfree(name receiver, uint32_t cpu_ms, uint32_t net_bytes);\nACTION setcurve(uint8_t curve_id, std::vector<uint64_t> params);\n```\n\nSubsidy curves govern per-block refill of free-tier buckets, and are tuneable by BP vote without a hard fork.\n\n```\n\n## Update with changes\n\nMirrored from [`flavors/Annie/contracts/eosio.subsidy/README.md`](https://github.com/dougbutner/Longhorn-Masterplan/blob/main/flavors/Annie/contracts/eosio.subsidy/README.md). Push to that file to update this snippet on the next build.\n",
+    "file": "masterplan/enhanced-resources.md",
+    "depth": 1,
+    "children": []
   },
   {
-    "id": "ux-expand-fullscreen",
-    "title": "Node expand / contract & fullscreen",
+    "id": "kv-storage",
+    "title": "KV Storage Model",
+    "parent": "longhorn",
+    "status": "in_progress",
+    "progress": 10,
+    "owners": [],
+    "tags": [
+      "divergence",
+      "storage"
+    ],
+    "order": 4,
+    "source": {
+      "path": "flavors/Annie/contracts/eosio.kv/README.md",
+      "url": "https://github.com/dougbutner/Longhorn-Masterplan/blob/main/flavors/Annie/contracts/eosio.kv/README.md",
+      "exists": true,
+      "language": "md"
+    },
+    "body": "## User Story\n\nAs a contract developer, I store arbitrary blobs by key without designing a multi-index schema and without paying for unused secondary indexes.\n\n## Problem Statement\n\nAntelope's multi-index is powerful but verbose. Even when a contract only needs primary-key lookup, the multi-index machinery imposes a layout and a RAM overhead. Modern contract languages (and modern developers) expect KV as a first-class primitive.\n\n## Solution Statement\n\nA first-class KV table primitive available in both C++ (via CDT intrinsics) and TypeScript (via the XPRNetwork-style `@table` decorator). Secondary indexes are opt-in and per-entry. Same RAM-billing model as multi-index, lower per-entry overhead.\n\n## Reference Contracts\n\n- [`XPRNetwork/ts-smart-contracts`](https://github.com/XPRNetwork/ts-smart-contracts) — TS KV decorator precedent.\n\n## Implementation Steps\n\n1. Add KV intrinsics to CDT (`kv_set`, `kv_get`, `kv_erase`, iterator helpers).\n2. Add `@table(\"kvstore\")` decorator to the TS contracts SDK with `@primaryKey` and opt-in `@secondary`.\n3. RAM billing identical to multi-index but per-entry; secondaries billed only when present.\n4. Document migration patterns from multi-index → KV for greenfield contracts.\n\n## Full code snippet\n\n```md\n# eosio.kv (Annie)\n\nStatus: scaffolding\nUpstream: XPRNetwork/ts-smart-contracts (TypeScript KV decorators)\nUpstream-path: ts-smart-contracts\n\n## Annie additions\n\n- C++ and TypeScript surfaces for KV tables (see masterplan `kv-storage-model`).\n- Default `@secondary` indexes opt-in; raw KV is the cheapest baseline.\n\n```\n\n## Update with changes\n\nMirrored from [`flavors/Annie/contracts/eosio.kv/README.md`](https://github.com/dougbutner/Longhorn-Masterplan/blob/main/flavors/Annie/contracts/eosio.kv/README.md). Push to that file to update this snippet on the next build.\n",
+    "file": "masterplan/kv-storage.md",
+    "depth": 1,
+    "children": []
+  },
+  {
+    "id": "events-indexing",
+    "title": "Events & Indexing",
+    "parent": "longhorn",
+    "status": "in_progress",
+    "progress": 5,
+    "owners": [],
+    "tags": [
+      "divergence",
+      "indexing"
+    ],
+    "order": 5,
+    "source": {
+      "path": "flavors/Annie/contracts/eosio.events/README.md",
+      "url": "https://github.com/dougbutner/Longhorn-Masterplan/blob/main/flavors/Annie/contracts/eosio.events/README.md",
+      "exists": true,
+      "language": "md"
+    },
+    "body": "## User Story\n\nAs an indexer operator, I subscribe to a structured stream of typed events emitted by contracts, and I never have to re-derive state by replaying action traces.\n\n## Problem Statement\n\nAntelope history exposes action traces and inline actions, but state changes inside contracts (especially in KV tables) aren't visible without re-running the contract's logic. Indexers end up matching on action names and parsing memos to guess at intent.\n\n## Solution Statement\n\nA native `emit_event(event_type, data)` primitive recorded alongside action traces in every block. Schemas are registered on chain via `eosio.events::register_schema`, so off-chain consumers know exactly how to decode each event. `nodeos` exposes a filtered websocket so indexers subscribe to just the slices they care about.\n\n## Reference Contracts\n\n- New — no direct upstream.\n\n## Implementation Steps\n\n1. Add an `events` vector to the block format (additive).\n2. Implement `eosio.events::register_schema(event_type, abi_fragment)` privileged action.\n3. Add `emit_event(event_type, data)` callable inline from any contract.\n4. Expose a websocket on `nodeos` with subscription filtering by `account` + `event_type`.\n5. Provide a TS SDK helper for consumers (decoder + reconnect/backoff).\n\n## Full code snippet\n\n```md\n# eosio.events (Annie)\n\nStatus: scaffolding\nUpstream: new\nUpstream-path: \n\n## Surface\n\n```cpp\nACTION register_schema(name event_type, std::string abi_fragment);\nACTION emit_event(name event_type, std::vector<char> data); // privileged-only callable\n```\n\n`emit_event` is callable via inline action from any contract; the chain records it on the block alongside action traces.\n\n```\n\n## Update with changes\n\nMirrored from [`flavors/Annie/contracts/eosio.events/README.md`](https://github.com/dougbutner/Longhorn-Masterplan/blob/main/flavors/Annie/contracts/eosio.events/README.md). Push to that file to update this snippet on the next build.\n",
+    "file": "masterplan/events-indexing.md",
+    "depth": 1,
+    "children": []
+  },
+  {
+    "id": "custom-system-contracts",
+    "title": "Custom System Contracts",
+    "parent": "longhorn",
+    "status": "in_progress",
+    "progress": 15,
+    "owners": [],
+    "tags": [
+      "divergence",
+      "contracts"
+    ],
+    "order": 6,
+    "body": "## User Story\n\nAs a Longhorn contract author, I have a coherent set of privileged contracts that compose cleanly with each other — identity, lazy materialization, passkey auth, events, subsidy — without each being a one-off fork.\n\n## Solution Statement\n\nShip a coherent privileged-contract suite as a single overlay: `eosio.system`, `eosio.token`, `eosio.proton`-style identity, `eosio.passkey`, `eosio.events`, `eosio.subsidy`, `eosio.kv`. Each is a small additive overlay on a single declared upstream so divergences stay auditable.\n\n## Problem Statement\n\nPrivileged actions historically scatter across forks (one ecosystem adds identity, another adds free tier, another adds events). Mixing and matching means contracts behave differently depending on the chain. Longhorn picks a coherent set, ships them together, and tracks each one against its upstream.\n\n## Reference Contracts\n\n- [`AntelopeIO/reference-contracts`](https://github.com/AntelopeIO/reference-contracts) — base for system + token + boot.\n- [`XPRNetwork/proton.contracts`](https://github.com/XPRNetwork/proton.contracts) — identity / `@names`.\n- [`Tonomy-Foundation/Tonomy-ID`](https://github.com/Tonomy-Foundation/Tonomy-ID) — passkeys / programmable permissions.\n\n## Implementation Steps\n\n1. Track each contract as a child node here with its own status + source mirror.\n2. Each contract README declares `Upstream:` + `Upstream-path:` so divergences are diff-able against the upstream snapshot.\n3. Ship `flavors/Annie/scripts/build.sh` to compile the whole suite via CDT in one pass.",
+    "file": "masterplan/custom-system-contracts.md",
+    "depth": 1,
+    "children": [
+      "identity-verification",
+      "lazy-passkey-actions"
+    ]
+  },
+  {
+    "id": "reflection-tokens",
+    "title": "Reflection-Backed Token System",
+    "parent": "longhorn",
     "status": "not_started",
     "progress": 5,
     "owners": [],
-    "depends_on": [
-      "d3-progress-map"
-    ],
     "tags": [
-      "frontend",
-      "ux"
+      "divergence",
+      "tokens",
+      "economics"
     ],
-    "body": "# Node expand / contract & fullscreen\n\nTwo related affordances that keep the map readable as the plan grows.\n\n## Expand / contract\n\n- Every node has a `collapsed` boolean in viz state.\n- Collapsing a node hides all transitive descendants and badges the node with a `+N` chip showing how many were hidden.\n- Buttons in the top bar: **Expand all**, **Collapse all**, **Collapse to depth N**.\n- Keyboard: `E` (expand all), `C` (collapse all), `[` / `]` (depth−/+).\n\n## Fullscreen\n\n- `requestFullscreen()` on the map container.\n- While fullscreen, the side panel slides into an overlay drawer.\n- Esc exits; the F key toggles.\n- Persist fullscreen pref in `localStorage`.\n\n## Accessibility\n\n- Honor `prefers-reduced-motion` (no pulse halo, instant transitions).\n- All controls reachable by Tab; ARIA labels on every icon button.",
-    "file": "masterplan/ux-expand-fullscreen.md"
+    "order": 7,
+    "source": {
+      "path": "flavors/Annie/contracts/eosio.token/README.md",
+      "url": "https://github.com/dougbutner/Longhorn-Masterplan/blob/main/flavors/Annie/contracts/eosio.token/README.md",
+      "exists": true,
+      "language": "md"
+    },
+    "body": "## User Story\n\nAs a token holder, every time someone transfers the token I hold, I receive a tiny reflection directly in my wallet. A portion of the same fee funds the community coffers that the Fractal Governance overlay distributes.\n\n## Problem Statement\n\nMost token designs concentrate value at the issuer + treasury. Holders take risk but receive no direct flow. Reflection mechanisms exist on other chains but they break LPs and are vulnerable to bot extraction.\n\n## Solution Statement\n\nA wrapped-token contract that, on every transfer, taxes a configurable fee and splits it: most of it as reflection to current holders (proportional to balance), the rest into a community treasury wallet (consumed by Fractal Governance). DEX pools opt out of reflection via the protocol-level pool-locking primitive (see DEX Mechanics).\n\n## Reference Contracts\n\n- [`AntelopeIO/reference-contracts`](https://github.com/AntelopeIO/reference-contracts) — `eosio.token::transfer`.\n\n## Implementation Steps\n\n1. Wrapper contract `wraptoken.x` that holds and reissues an underlying token with reflection hooks.\n2. Extend `transfer(from, to, quantity, memo)` with a reflection accumulator updated each block.\n3. `apply_reflection(token_contract, amount)` cron-style action settles holder balances.\n4. Exclude addresses listed in `eosio.dex::locked_pools` from the reflection split.\n5. Community-treasury portion routes to `eosio.fractal::community_fund`.\n\n## Full code snippet\n\n```md\n# eosio.token (Annie)\n\nStatus: scaffolding\nUpstream: AntelopeIO/reference-contracts\nUpstream-path: antelope-reference-contracts/contracts/eosio.token\n\n## Annie additions\n\n- `transfer` emits a richer event via `eosio.events::emit_event` so KV-only indexers see balance changes without scanning action traces.\n- No change to the public ABI; existing wallets and dapps work unmodified.\n\n```\n\n## Update with changes\n\nMirrored from [`flavors/Annie/contracts/eosio.token/README.md`](https://github.com/dougbutner/Longhorn-Masterplan/blob/main/flavors/Annie/contracts/eosio.token/README.md). Push to that file to update this snippet on the next build.\n",
+    "file": "masterplan/reflection-tokens.md",
+    "depth": 1,
+    "children": []
   },
   {
-    "id": "vaulta-auth",
-    "title": "Vaulta / EOS sign-in",
-    "status": "in_progress",
-    "progress": 40,
-    "owners": [
-      "annie",
-      "dougbutner"
-    ],
-    "depends_on": [
-      "frontend-overview"
-    ],
+    "id": "fractal-governance",
+    "title": "Human Layer Governance (Fractal-style)",
+    "parent": "longhorn",
+    "status": "not_started",
+    "progress": 5,
+    "owners": [],
     "tags": [
-      "frontend",
-      "auth",
-      "vaulta"
+      "divergence",
+      "governance"
     ],
-    "body": "# Vaulta / EOS sign-in\n\nWe use **Wharfkit SessionKit** to authenticate participants. The signed identity unlocks the Activate button and every PR template the UI generates.\n\n## Wharfkit configuration\n\n```ts\nimport { SessionKit, Chains } from \"@wharfkit/session\";\nimport { WebRenderer } from \"@wharfkit/web-renderer\";\nimport { WalletPluginAnchor } from \"@wharfkit/wallet-plugin-anchor\";\nimport { WalletPluginWebAuthn } from \"@wharfkit/wallet-plugin-webauthn\";\n\nexport const sessionKit = new SessionKit({\n  appName: \"longhorn-masterplan\",\n  chains: [Chains.EOS, Chains.Vaulta],\n  ui: new WebRenderer(),\n  walletPlugins: [\n    new WalletPluginAnchor(),\n    new WalletPluginWebAuthn(),\n  ],\n});\n```\n\n## Activate gate\n\nThe **Activate** button is disabled until `sessionKit.restore()` returns a Session. Once signed in:\n\n- The actor's vaulta name is shown in the header.\n- A pill colored from `CONTRIBUTORS.json` appears next to it.\n- The menu's write-style items (claim node, open PR, comment) become enabled.\n\n## PR title\n\nEvery PR opened through the UI is titled `[<actor>] <action> <node-id>`. CI fails any PR whose title doesn't start with a known `[vaultaname]` from `CONTRIBUTORS.json` (or whose proof signature can't be verified).\n\n## Passkey path\n\nThe WebAuthn wallet plugin mirrors the **Longhorn wallet** flow described in `chain-passkey-flow.md`: a passkey on device, no seed phrase, transactions signed via WebAuthn.",
-    "file": "masterplan/vaulta-auth.md"
+    "order": 8,
+    "body": "## User Story\n\nAs a community member on Longhorn, I propose how a slice of token-fee inflation gets spent, my peers vote, and approved proposals fund themselves directly from the community treasury. Multi-chain communities aggregate the same way.\n\n## Problem Statement\n\nTop-down BP voting concentrates control at the consensus layer. Treasury funding is opaque and slow. Fractally / Eden on EOS showed that smaller, recursive human-layer governance scales to real-world coordination — that pattern deserves to be a first-class chain feature, not a one-off contract.\n\n## Solution Statement\n\nNative fractal-governance contract layered on top of Reflection-Backed Tokens. Communities are registered groups; proposals draw from the community fund accumulated via reflection fees + inflation. Voting is recursive (sub-groups within groups) and cross-chain via the IBC primitives shipped under Consensus Tweaks.\n\n## Reference Contracts\n\n- Fractally / Eden on EOS (design precedent, off-chain).\n\n## Implementation Steps\n\n1. `eosio.fractal::register_community(name, parent_community)` for nested groups.\n2. `propose_fractal(community, funding, payload)` — submit a proposal.\n3. `vote_fractal(voter, proposal_id, approve)` — weighted by community membership.\n4. `distribute_inflation(community, amount)` — settles approved proposals from the community fund.\n5. IBC bridge for proposals/votes that span chains.",
+    "file": "masterplan/fractal-governance.md",
+    "depth": 1,
+    "children": []
+  },
+  {
+    "id": "dex-mechanics",
+    "title": "Advanced LP & DEX Mechanics",
+    "parent": "longhorn",
+    "status": "not_started",
+    "progress": 5,
+    "owners": [],
+    "tags": [
+      "divergence",
+      "dex",
+      "economics"
+    ],
+    "order": 9,
+    "body": "## User Story\n\nAs a market maker, I deploy a pool that's cheap to interact with, protected from reflection tax, and supports native perpetuals — without having to bolt these features on top of a stock AMM.\n\n## Problem Statement\n\nReflection-tax tokens break naive LPs (every swap eats fees). Perpetuals live in app-layer contracts with bespoke economics. Fees are inconsistent between dapps.\n\n## Solution Statement\n\nThree protocol-level primitives ship together: pool locking (a contract registers a pool address as \"locked\" so reflection logic skips it), native perpetual support (`execute_perp`), and a standardized DEX fee model so every dapp has the same economic baseline.\n\n## Reference Contracts\n\n- New, but informed by GMX-style perps + Uniswap v3 LP design.\n\n## Implementation Steps\n\n1. Ship the three sub-features in `pool-locking`, `perpetuals`, and `fee-bypass` child nodes.\n2. Document the canonical fee schedule + reflection-exemption rules.\n3. Provide a reference DEX contract under `flavors/Annie/contracts/eosio.dex/`.",
+    "file": "masterplan/dex-mechanics.md",
+    "depth": 1,
+    "children": [
+      "dex-pool-locking",
+      "dex-perpetuals",
+      "dex-fee-bypass"
+    ]
+  },
+  {
+    "id": "consensus-tweaks",
+    "title": "Consensus & Protocol Tweaks",
+    "parent": "longhorn",
+    "status": "not_started",
+    "progress": 0,
+    "owners": [],
+    "tags": [
+      "divergence",
+      "consensus"
+    ],
+    "order": 10,
+    "body": "## User Story\n\nAs a user, my transactions feel fast and final; as a builder, cross-chain claims verify cheaply.\n\n## Problem Statement\n\nAntelope's default finality is sub-second on Savanna but the UX surface (wallets, dapps) doesn't always wire it through. IBC modules require a lot of glue to deploy.\n\n## Solution Statement\n\nTrack AntelopeIO/spring's Savanna releases. Ship a default IBC light-client config so masterplan dapps can verify cross-chain claims out of the box. Tune dPoS curves for higher participation; jitter BP schedule for more uniform block times under load.\n\n## Reference Contracts\n\n- [`AntelopeIO/spring`](https://github.com/AntelopeIO/spring) — node software.\n\n## Implementation Steps\n\n1. Pin Spring release tag; document upgrade cadence.\n2. Bundle IBC light clients for EOS, Vaulta, Jungle 4 by default.\n3. Vote-decay curve + BP-jitter as chain-config knobs (no hard fork to tune).",
+    "file": "masterplan/consensus-tweaks.md",
+    "depth": 1,
+    "children": []
+  },
+  {
+    "id": "jungle4-testing",
+    "title": "Testing on Jungle 4",
+    "parent": "longhorn",
+    "status": "in_progress",
+    "progress": 30,
+    "owners": [],
+    "tags": [
+      "testing"
+    ],
+    "order": 11,
+    "body": "## User Story\n\nAs a builder, I validate every Longhorn divergence against a live testnet that mirrors Antelope semantics before any of it touches mainnet.\n\n## Problem Statement\n\nTesting chain-level divergences without a public testnet is slow and lossy — local nodeos doesn't reproduce real-world peer dynamics.\n\n## Solution Statement\n\nUse [Jungle 4](https://jungle4.unicove.com) as the canonical integration target. It is Anchor-compatible, supports web-based free account creation via APIs (paid via smart contract), custom session keys, and mnemonic support. Native lazy materialization + key-as-account-name will significantly improve passkey / web-authenticator onboarding once landed.\n\n## Reference Links\n\n- Signup / Wallet: [jungle4-account.unicove.com](https://jungle4-account.unicove.com)\n- Explorer / dApp: [jungle4.unicove.com](https://jungle4.unicove.com)\n\n## Implementation Steps\n\n1. Stand up a Longhorn-flavored Jungle 4 leaf so divergences are testable without disturbing the canonical Jungle 4.\n2. CI deploys every PR's contracts to that leaf and runs an integration suite.\n3. Once a feature is green there, mark its node `done` here.",
+    "file": "masterplan/jungle4-testing.md",
+    "depth": 1,
+    "children": []
+  },
+  {
+    "id": "identity-verification",
+    "title": "Identity Verification",
+    "parent": "custom-system-contracts",
+    "status": "not_started",
+    "progress": 5,
+    "owners": [],
+    "tags": [
+      "contracts",
+      "identity"
+    ],
+    "order": 0,
+    "source": {
+      "path": "flavors/Annie/contracts/eosio.proton/README.md",
+      "url": "https://github.com/dougbutner/Longhorn-Masterplan/blob/main/flavors/Annie/contracts/eosio.proton/README.md",
+      "exists": true,
+      "language": "md"
+    },
+    "body": "## User Story\n\nAs a user, I can prove I'm a real person to apps that care (KYC, anti-bot) without exposing my legal identity to the chain.\n\n## Problem Statement\n\nBots and sybils break many on-chain economic designs. Today identity is duct-tape: an off-chain KYC vendor stores a flag and apps trust the vendor.\n\n## Solution Statement\n\n`eosio.proton`-style identity contract stores `verified: bool` per account, plus an issuer signature so apps can audit the provenance of the verification. The proof itself stays off chain; only the attestation does.\n\n## Reference Contracts\n\n- [`XPRNetwork/proton.contracts`](https://github.com/XPRNetwork/proton.contracts) — `eosio.proton`.\n\n## Implementation Steps\n\n1. `verify_identity(account, proof)` — privileged; called by a whitelisted issuer.\n2. `set_verified(account, status)` — privileged; flips the bit.\n3. Public read-only view so any contract can branch on `is_verified(account)`.\n4. Issue rotation + revocation flow.\n\n## Full code snippet\n\n```md\n# eosio.proton (Annie)\n\nStatus: scaffolding\nUpstream: XPRNetwork/proton.contracts\nUpstream-path: proton.contracts/contracts/eosio.proton\n\n## Annie additions\n\n- `verify_identity` / `set_verified` retained.\n- `@name` registry table cross-linked with `eosio.passkey` so a Vaulta name maps to one or more passkey credentials.\n- Used by the masterplan UI's CONTRIBUTORS list as the source-of-truth for \"is this a real vaulta account\".\n\n```\n\n## Update with changes\n\nMirrored from [`flavors/Annie/contracts/eosio.proton/README.md`](https://github.com/dougbutner/Longhorn-Masterplan/blob/main/flavors/Annie/contracts/eosio.proton/README.md). Push to that file to update this snippet on the next build.\n",
+    "file": "masterplan/identity-verification.md",
+    "depth": 2,
+    "children": []
+  },
+  {
+    "id": "lazy-passkey-actions",
+    "title": "Privileged Lazy / Passkey Actions",
+    "parent": "custom-system-contracts",
+    "status": "not_started",
+    "progress": 5,
+    "owners": [],
+    "tags": [
+      "contracts",
+      "passkey"
+    ],
+    "order": 1,
+    "source": {
+      "path": "flavors/Annie/contracts/eosio.system/src/eosio.system.cpp",
+      "url": "https://github.com/dougbutner/Longhorn-Masterplan/blob/main/flavors/Annie/contracts/eosio.system/src/eosio.system.cpp",
+      "exists": true,
+      "language": "cpp"
+    },
+    "body": "## User Story\n\nAs `eosio.system`, I can materialize accounts on transfer and accept passkey-signed authorizations on `@active` — without any of that logic leaking into unprivileged contracts.\n\n## Problem Statement\n\nLazy materialization and passkey auth need privileged operations (account creation, sig kind registration, billing). They have to live inside the system contract suite to be safe.\n\n## Solution Statement\n\nA small set of privileged actions glued onto `eosio.system`, callable only by the chain itself:\n\n- `create_account(creator, newacc, key, lazy)`\n- `on_transfer(from, to, quantity, memo)` (notify-handler glue for lazy)\n- `bind_passkey(account, credential)`\n- `register_sig_kind(kind, abi_fragment)` (for future sig types)\n\n## Reference Contracts\n\n- [`AntelopeIO/reference-contracts`](https://github.com/AntelopeIO/reference-contracts) — `eosio.system`.\n\n## Implementation Steps\n\n1. Land the four actions as a small auditable diff against reference-contracts.\n2. Restrict to privileged-only with a clean failure when called by a non-privileged actor.\n3. Pair every action with a unit test in `tests/`.\n\n## Full code snippet\n\n```cpp\n// eosio.system — Annie flavor scaffold.\n//\n// This file is intentionally minimal. The full reference implementation lives in\n//   flavors/Annie/upstream/antelope-reference-contracts/contracts/eosio.system/\n// after running flavors/scripts/pull-references.sh.\n//\n// Annie's divergences live here as small, auditable overlays.\n\n#include <eosio/eosio.hpp>\n#include <eosio/asset.hpp>\n#include <eosio/crypto.hpp>\n\nusing namespace eosio;\n\nCONTRACT system_contract : public contract {\npublic:\n   using contract::contract;\n\n   // Lazy-aware account creation. When lazy=true the chain materializes the\n   // account on first action instead of at create time.\n   ACTION newaccount(name creator, name newacc, public_key key, bool lazy /* = true */);\n\n   // Token notify-handler entry point. Auto-creates the destination account if\n   // `to` is a public-key string and does not yet exist on chain.\n   [[eosio::on_notify(\"eosio.token::transfer\")]]\n   void on_transfer(name from, name to, asset quantity, std::string memo);\n};\n\n```\n\n## Update with changes\n\nMirrored from [`flavors/Annie/contracts/eosio.system/src/eosio.system.cpp`](https://github.com/dougbutner/Longhorn-Masterplan/blob/main/flavors/Annie/contracts/eosio.system/src/eosio.system.cpp). Push to that file to update this snippet on the next build.\n",
+    "file": "masterplan/lazy-passkey-actions.md",
+    "depth": 2,
+    "children": []
+  },
+  {
+    "id": "dex-pool-locking",
+    "title": "Protocol-Level Pool Locking",
+    "parent": "dex-mechanics",
+    "status": "not_started",
+    "progress": 0,
+    "owners": [],
+    "tags": [
+      "dex"
+    ],
+    "order": 0,
+    "body": "## User Story\n\nAs a market maker holding a reflection-taxed token in a pool, swaps through my pool don't bleed reflection fees and don't pollute the holder reflection table.\n\n## Problem Statement\n\nReflection-tax tokens inside an AMM redistribute their reflection to themselves with every swap, making spreads quote incorrectly and creating MEV opportunities for bots.\n\n## Solution Statement\n\nA privileged `lock_pool(pool, liquidity, lock_period)` action registers a pool address as \"reflection-exempt\" for the duration of the lock. The reflection token contract reads this list and skips locked addresses on the split.\n\n## Reference Contracts\n\n- New.\n\n## Implementation Steps\n\n1. `eosio.dex::lock_pool(pool, liquidity, lock_period)` writes a row in `locked_pools` KV.\n2. Reflection contract checks `locked_pools` on every transfer.\n3. Lock period extends automatically while liquidity stays above a threshold.\n4. Audit trail: every lock + unlock emits an event (`Events & Indexing`).",
+    "file": "masterplan/dex-pool-locking.md",
+    "depth": 2,
+    "children": []
+  },
+  {
+    "id": "dex-perpetuals",
+    "title": "Native Perpetuals",
+    "parent": "dex-mechanics",
+    "status": "not_started",
+    "progress": 0,
+    "owners": [],
+    "tags": [
+      "dex"
+    ],
+    "order": 1,
+    "body": "## User Story\n\nAs a trader, I open a leveraged long/short on Longhorn through a single action — no bridge, no off-chain oracle hops, no app-layer signer.\n\n## Problem Statement\n\nPerpetuals on every other chain are app-layer contracts that re-invent funding rates, liquidations, and oracle integration. Each implementation has subtly different economics.\n\n## Solution Statement\n\n`execute_perp(trader, pair, is_long, size)` is a native DEX action. Funding rates are computed by the chain from on-chain oracle prices (pluggable). Liquidations are deterministic and called by anyone for a fee.\n\n## Reference Contracts\n\n- New.\n\n## Implementation Steps\n\n1. Standard oracle interface + adapter for at least two price sources.\n2. Per-pair config (max leverage, funding curve).\n3. Open/close + liquidation actions; emit events for indexers.\n4. Risk parameters governed by Fractal Governance.",
+    "file": "masterplan/dex-perpetuals.md",
+    "depth": 2,
+    "children": []
+  },
+  {
+    "id": "dex-fee-bypass",
+    "title": "Standardized DEX Fee Schedule",
+    "parent": "dex-mechanics",
+    "status": "not_started",
+    "progress": 0,
+    "owners": [],
+    "tags": [
+      "dex"
+    ],
+    "order": 2,
+    "body": "## User Story\n\nAs a builder, I quote and integrate fees the same way against every DEX on Longhorn.\n\n## Problem Statement\n\nInconsistent fee models across DEXes makes routing, accounting, and UX inconsistent. Reflection-aware integrations have to special-case every DEX.\n\n## Solution Statement\n\nChain-defined canonical fee schedule (`apply_dex_fee(pool, fee, bypass_tax)`) that any DEX contract can call to record fees. Bots and aggregators see a uniform fee surface; reflection logic reads the same surface to skip taxed pools.\n\n## Reference Contracts\n\n- New.\n\n## Implementation Steps\n\n1. `eosio.dex::apply_dex_fee(pool, fee, bypass_tax)`.\n2. Canonical fee tiers; per-pool override governed by Fractal proposal.\n3. Public read-only view so aggregators can ingest the fee surface.",
+    "file": "masterplan/dex-fee-bypass.md",
+    "depth": 2,
+    "children": []
+  },
+  {
+    "id": "retained-account-names",
+    "title": "12-Character Account Names",
+    "parent": "retained-core",
+    "status": "done",
+    "progress": 100,
+    "owners": [],
+    "tags": [
+      "retained"
+    ],
+    "order": 0,
+    "body": "## User Story\n\nAs a user, I want my account name to stay short, memorable, and compatible with every Antelope wallet and explorer.\n\n## Problem Statement\n\nSome forks have proposed renaming or restructuring accounts. Doing so invalidates every wallet, contract, and indexer that already knows how to parse a `name`.\n\n## Solution Statement\n\nKeep the 12-character base32-style `name` type exactly as defined by Antelope. Layer human-readable `@names` (resolved via identity contract) and hashed/long account references on top — never replacing the base.\n\n## Reference Contracts\n\n- [`AntelopeIO/reference-contracts`](https://github.com/AntelopeIO/reference-contracts) — `name` type, `eosio.system::newaccount`.\n\n## Implementation Steps\n\n1. Take no action on the base `name` type.\n2. Reserve a name prefix range for hashed/long-account proxies (see Lazy Account Materialization).\n3. Surface `@name` lookup via the identity overlay (see Custom System Contracts).",
+    "file": "masterplan/retained-account-names.md",
+    "depth": 2,
+    "children": []
+  },
+  {
+    "id": "retained-permissions",
+    "title": "Permission System",
+    "parent": "retained-core",
+    "status": "done",
+    "progress": 100,
+    "owners": [],
+    "tags": [
+      "retained"
+    ],
+    "order": 1,
+    "body": "## User Story\n\nAs a developer, I want `owner` / `active` / custom permission levels with the weight/threshold logic I already understand.\n\n## Problem Statement\n\nPermissions are the trust spine of Antelope. Replacing them breaks every multisig, every cold-wallet flow, and every exchange integration.\n\n## Solution Statement\n\nPreserve the existing permission graph and authority weight model unchanged. Extend it additively via Programmable Permissions + Passkeys so new sig kinds can plug in without changing the base shape.\n\n## Reference Contracts\n\n- [`AntelopeIO/reference-contracts`](https://github.com/AntelopeIO/reference-contracts) — `eosio.system::updateauth`, native `authority` struct.\n\n## Implementation Steps\n\n1. Leave native authority + `updateauth` semantics untouched.\n2. Reserve a new authority `kind` byte so Programmable Permissions / WebAuthn keys can be attached as additional weighted entries.\n3. Keep K1/R1 signatures as the default path; passkeys are an addition, not a replacement.",
+    "file": "masterplan/retained-permissions.md",
+    "depth": 2,
+    "children": []
+  },
+  {
+    "id": "retained-resources",
+    "title": "Subjective Resource Model",
+    "parent": "retained-core",
+    "status": "done",
+    "progress": 100,
+    "owners": [],
+    "tags": [
+      "retained"
+    ],
+    "order": 2,
+    "body": "## User Story\n\nAs a contract author, I want CPU/NET/RAM to behave the way I designed against — measurable, predictable, and effectively free for well-behaved contracts.\n\n## Problem Statement\n\nReplacing CPU/NET/RAM with a gas model breaks the whole point of Antelope's subjective billing.\n\n## Solution Statement\n\nKeep CPU/NET/RAM intrinsics, staking, and billing semantics. The Enhanced Resource Model overlay adds a free-tier subsidy on top — contracts can't tell the difference.\n\n## Reference Contracts\n\n- [`AntelopeIO/reference-contracts`](https://github.com/AntelopeIO/reference-contracts) — `eosio.system::delegatebw`, `buyrambytes`.\n\n## Implementation Steps\n\n1. Do not change intrinsics or accounting structures.\n2. Route the free-tier subsidy through a privileged `eosio.subsidy` contract that pays into the existing CPU/NET buckets.\n3. Existing wallets and contracts see \"the user has some stake\" — same shape, different source.",
+    "file": "masterplan/retained-resources.md",
+    "depth": 2,
+    "children": []
+  },
+  {
+    "id": "retained-wasm-cdt",
+    "title": "WASM + CDT Baseline",
+    "parent": "retained-core",
+    "status": "done",
+    "progress": 100,
+    "owners": [],
+    "tags": [
+      "retained"
+    ],
+    "order": 3,
+    "body": "## User Story\n\nAs a contract developer, I want to compile against the same CDT, link the same intrinsics, and deploy with the same ABI shape as I do on EOS / Vaulta / WAX today.\n\n## Problem Statement\n\nA fork that touches the WASM VM, intrinsic set, or ABI format forks the developer ecosystem too.\n\n## Solution Statement\n\nPin to AntelopeIO's CDT and WASM runtime. Every Longhorn addition (KV intrinsics, event emission, passkey verification) is layered as an additional intrinsic / contract — never a replacement.\n\n## Reference Contracts\n\n- [`AntelopeIO/cdt`](https://github.com/AntelopeIO/cdt) — contract development toolkit.\n- [`AntelopeIO/spring`](https://github.com/AntelopeIO/spring) — node + VM.\n\n## Implementation Steps\n\n1. Pin a CDT release tag in `flavors/Annie/scripts/build.sh`.\n2. Add new intrinsics in a numbered namespace so contracts that don't import them keep compiling.\n3. Run upstream ABI-compatibility tests on every PR.",
+    "file": "masterplan/retained-wasm-cdt.md",
+    "depth": 2,
+    "children": []
   }
 ]

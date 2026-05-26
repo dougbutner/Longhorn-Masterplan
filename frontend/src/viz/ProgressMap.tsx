@@ -19,6 +19,8 @@ interface SimNode extends d3.SimulationNodeDatum {
   status: PlanNode["status"];
   owners: string[];
   hiddenChildren: number;
+  depth: number;
+  isRoot: boolean;
 }
 
 interface SimLink extends d3.SimulationLinkDatum<SimNode> {
@@ -27,17 +29,16 @@ interface SimLink extends d3.SimulationLinkDatum<SimNode> {
 }
 
 /**
- * Walk depends_on edges and compute the set of nodes hidden under each collapsed root.
+ * Walk parent edges and compute the set of nodes hidden under each collapsed root.
  */
 function hiddenSets(nodes: PlanNode[], collapsed: Set<string>) {
   const byId = new Map(nodes.map((n) => [n.id, n] as const));
   const childrenOf = new Map<string, string[]>();
   for (const n of nodes) {
-    for (const dep of n.depends_on) {
-      const arr = childrenOf.get(dep) ?? [];
-      arr.push(n.id);
-      childrenOf.set(dep, arr);
-    }
+    if (!n.parent) continue;
+    const arr = childrenOf.get(n.parent) ?? [];
+    arr.push(n.id);
+    childrenOf.set(n.parent, arr);
   }
   const hidden = new Set<string>();
   const hiddenByRoot = new Map<string, number>();
@@ -57,6 +58,11 @@ function hiddenSets(nodes: PlanNode[], collapsed: Set<string>) {
   return { hidden, hiddenByRoot };
 }
 
+function radiusFor(progress: number, isRoot: boolean) {
+  if (isRoot) return 30;
+  return 12 + (progress / 100) * 18;
+}
+
 export function ProgressMap({
   nodes,
   contributors,
@@ -68,8 +74,8 @@ export function ProgressMap({
   const svgRef = useRef<SVGSVGElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
 
-  const { simNodes, simLinks, hiddenByRoot } = useMemo(() => {
-    const { hidden, hiddenByRoot: hbr } = hiddenSets(nodes, collapsed);
+  const { simNodes, simLinks } = useMemo(() => {
+    const { hidden, hiddenByRoot } = hiddenSets(nodes, collapsed);
     const visible = nodes.filter((n) => !hidden.has(n.id));
     const visibleIds = new Set(visible.map((n) => n.id));
     const sNodes: SimNode[] = visible.map((n) => ({
@@ -78,15 +84,17 @@ export function ProgressMap({
       progress: n.progress,
       status: n.status,
       owners: n.owners,
-      hiddenChildren: hbr.get(n.id) ?? 0,
+      hiddenChildren: hiddenByRoot.get(n.id) ?? 0,
+      depth: n.depth,
+      isRoot: n.parent === null,
     }));
     const sLinks: SimLink[] = [];
     for (const n of visible) {
-      for (const dep of n.depends_on) {
-        if (visibleIds.has(dep)) sLinks.push({ source: dep, target: n.id });
+      if (n.parent && visibleIds.has(n.parent)) {
+        sLinks.push({ source: n.parent, target: n.id });
       }
     }
-    return { simNodes: sNodes, simLinks: sLinks, hiddenByRoot: hbr };
+    return { simNodes: sNodes, simLinks: sLinks };
   }, [nodes, collapsed]);
 
   useEffect(() => {
@@ -96,35 +104,22 @@ export function ProgressMap({
 
     const width = wrap.clientWidth;
     const height = wrap.clientHeight;
+    const cx = width / 2;
+    const cy = height / 2;
     const svg = d3.select(svgEl);
     svg.selectAll("*").remove();
     svg.attr("viewBox", `0 0 ${width} ${height}`);
-
-    const defs = svg.append("defs");
-    defs
-      .append("marker")
-      .attr("id", "arrow")
-      .attr("viewBox", "0 -5 10 10")
-      .attr("refX", 18)
-      .attr("refY", 0)
-      .attr("markerWidth", 6)
-      .attr("markerHeight", 6)
-      .attr("orient", "auto")
-      .append("path")
-      .attr("d", "M0,-5L10,0L0,5")
-      .attr("fill", "#475569");
 
     const g = svg.append("g");
 
     const linkSel = g
       .append("g")
       .attr("stroke", "#334155")
-      .attr("stroke-width", 1.4)
+      .attr("stroke-width", 1.2)
       .selectAll("line")
       .data(simLinks)
       .enter()
-      .append("line")
-      .attr("marker-end", "url(#arrow)");
+      .append("line");
 
     const nodeG = g
       .append("g")
@@ -141,16 +136,28 @@ export function ProgressMap({
 
     nodeG
       .append("circle")
-      .attr("r", (d) => 12 + (d.progress / 100) * 18)
-      .attr("fill", (d) => colorForProgress(d.progress))
+      .attr("r", (d) => radiusFor(d.progress, d.isRoot))
+      .attr("fill", (d) => (d.isRoot ? "#1e293b" : colorForProgress(d.progress)))
       .attr("stroke", (d) => {
+        if (d.isRoot) return "#f97316";
         const owner = d.owners[d.owners.length - 1];
         return owner && contributors[owner] ? contributors[owner].color : "#1e293b";
       })
-      .attr("stroke-width", 3)
-      .attr("class", (d) => (d.status === "in_progress" ? "node-pulse" : ""));
+      .attr("stroke-width", (d) => (d.isRoot ? 4 : 3))
+      .attr("class", (d) => (d.status === "in_progress" && !d.isRoot ? "node-pulse" : ""));
 
     nodeG
+      .filter((d) => d.isRoot)
+      .append("text")
+      .attr("text-anchor", "middle")
+      .attr("dy", "0.35em")
+      .attr("fill", "#f8fafc")
+      .attr("font-weight", "700")
+      .attr("font-size", 14)
+      .text("Longhorn");
+
+    nodeG
+      .filter((d) => !d.isRoot)
       .append("text")
       .attr("text-anchor", "middle")
       .attr("dy", "0.35em")
@@ -160,9 +167,10 @@ export function ProgressMap({
       .text((d) => statusIcon[d.status] ?? "○");
 
     nodeG
+      .filter((d) => !d.isRoot)
       .append("text")
       .attr("text-anchor", "middle")
-      .attr("dy", (d) => 12 + (d.progress / 100) * 18 + 14)
+      .attr("dy", (d) => radiusFor(d.progress, false) + 14)
       .attr("fill", "#e2e8f0")
       .attr("font-size", 11)
       .text((d) => d.title);
@@ -170,10 +178,14 @@ export function ProgressMap({
     nodeG
       .filter((d) => d.hiddenChildren > 0)
       .append("g")
-      .attr("transform", (d) => `translate(${12 + (d.progress / 100) * 18 + 4}, -${12 + (d.progress / 100) * 18})`)
-      .call((g) => {
-        g.append("circle").attr("r", 9).attr("fill", "#1e293b").attr("stroke", "#475569");
-        g.append("text")
+      .attr("transform", (d) => {
+        const r = radiusFor(d.progress, d.isRoot);
+        return `translate(${r + 4}, -${r})`;
+      })
+      .call((sel) => {
+        sel.append("circle").attr("r", 9).attr("fill", "#1e293b").attr("stroke", "#475569");
+        sel
+          .append("text")
           .attr("text-anchor", "middle")
           .attr("dy", "0.35em")
           .attr("font-size", 10)
@@ -190,13 +202,34 @@ export function ProgressMap({
       .forceSimulation<SimNode, SimLink>(simNodes)
       .force(
         "link",
-        d3.forceLink<SimNode, SimLink>(simLinks).id((d) => d.id).distance(90).strength(0.4),
+        d3
+          .forceLink<SimNode, SimLink>(simLinks)
+          .id((d) => d.id)
+          .distance((l) => {
+            const t = l.target as SimNode;
+            return t.depth === 1 ? 150 : 90;
+          })
+          .strength(0.6),
       )
-      .force("charge", d3.forceManyBody().strength(-260))
-      .force("center", d3.forceCenter(width / 2, height / 2))
-      .force("collide", d3.forceCollide(34));
+      .force("charge", d3.forceManyBody().strength(-300))
+      .force("collide", d3.forceCollide(38))
+      .force(
+        "radial",
+        d3
+          .forceRadial<SimNode>(
+            (d) => (d.isRoot ? 0 : d.depth * 180),
+            cx,
+            cy,
+          )
+          .strength((d) => (d.isRoot ? 1 : 0.18)),
+      );
 
     sim.on("tick", () => {
+      const root = simNodes.find((n) => n.isRoot);
+      if (root) {
+        root.fx = cx;
+        root.fy = cy;
+      }
       linkSel
         .attr("x1", (d) => (d.source as SimNode).x!)
         .attr("y1", (d) => (d.source as SimNode).y!)
@@ -207,6 +240,7 @@ export function ProgressMap({
 
     const drag = d3
       .drag<SVGGElement, SimNode>()
+      .filter((_e, d) => !d.isRoot)
       .on("start", (event, d) => {
         if (!event.active) sim.alphaTarget(0.3).restart();
         d.fx = d.x;
@@ -232,8 +266,19 @@ export function ProgressMap({
     const ro = new ResizeObserver(() => {
       const w = wrap.clientWidth, h = wrap.clientHeight;
       svg.attr("viewBox", `0 0 ${w} ${h}`);
-      sim.force("center", d3.forceCenter(w / 2, h / 2));
-      sim.alpha(0.3).restart();
+      const newCx = w / 2;
+      const newCy = h / 2;
+      sim.force(
+        "radial",
+        d3
+          .forceRadial<SimNode>(
+            (d) => (d.isRoot ? 0 : d.depth * 180),
+            newCx,
+            newCy,
+          )
+          .strength((d) => (d.isRoot ? 1 : 0.18)),
+      );
+      sim.alpha(0.5).restart();
     });
     ro.observe(wrap);
 
@@ -242,8 +287,6 @@ export function ProgressMap({
       ro.disconnect();
     };
   }, [simNodes, simLinks, contributors, selectedId, onSelect, onToggleCollapse]);
-
-  void hiddenByRoot;
 
   return (
     <div ref={wrapRef} className="w-full h-full bg-slate-950">

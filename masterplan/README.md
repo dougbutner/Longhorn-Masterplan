@@ -1,65 +1,67 @@
 # Longhorn Masterplan
 
-The masterplan is a graph of design components. Every file in this folder is a node; every node carries YAML frontmatter the UI uses to render the D3 completion map:
+A tree of release features. Every file in this folder is a node; every node carries YAML frontmatter the website's D3 map reads:
 
 ```yaml
 ---
-id: vaulta-auth                 # unique slug, matches filename
-title: Vaulta / EOS Sign-In
-status: in_progress             # not_started | in_progress | review | done
-progress: 40                    # 0-100, drives orange→green
-owners: [annie, dougbutner]     # vaulta names, looked up in CONTRIBUTORS.json
-depends_on: [frontend-overview] # graph edges
-tags: [frontend, auth]
+id: lazy-accounts                  # unique slug, matches filename
+title: Lazy Account Materialization
+parent: longhorn                   # null = root; otherwise the id of the parent node
+status: in_progress                # not_started | in_progress | review | done
+progress: 15                       # 0–100, drives orange → green
+order: 1                           # sibling order; lower = closer to parent
+tags: [divergence, onboarding]
+source:                            # optional; site mirrors this file's contents
+  path: flavors/Annie/contracts/eosio.system/src/eosio.system.cpp
+  url:  https://github.com/dougbutner/Longhorn-Masterplan/blob/main/flavors/Annie/contracts/eosio.system/src/eosio.system.cpp
 ---
 ```
 
-When you change a node, update its `progress` and `status`, then open a PR with `[yourvaultaname]` in the title.
+Hierarchy is at most three levels deep:
 
-## Component table of contents
+```
+longhorn (root)
+└── retained-core
+│   ├── retained-account-names
+│   ├── retained-permissions
+│   ├── retained-resources
+│   └── retained-wasm-cdt
+├── lazy-accounts
+├── programmable-permissions
+├── enhanced-resources
+├── kv-storage
+├── events-indexing
+├── custom-system-contracts
+│   ├── identity-verification
+│   └── lazy-passkey-actions
+├── reflection-tokens
+├── fractal-governance
+├── dex-mechanics
+│   ├── dex-pool-locking
+│   ├── dex-perpetuals
+│   └── dex-fee-bypass
+├── consensus-tweaks
+└── jungle4-testing
+```
 
-### Frontend / UX
+## Body template
 
-| # | Status | Component | File |
-|---|--------|-----------|------|
-| 1 | in_progress | Frontend overview | [`frontend-overview.md`](./frontend-overview.md) |
-| 2 | in_progress | Vaulta / EOS sign-in | [`vaulta-auth.md`](./vaulta-auth.md) |
-| 3 | in_progress | D3 progress map | [`d3-progress-map.md`](./d3-progress-map.md) |
-| 4 | not_started | Node expand / contract & fullscreen | [`ux-expand-fullscreen.md`](./ux-expand-fullscreen.md) |
-| 5 | not_started | Menu actions | [`menu-actions.md`](./menu-actions.md) |
-| 6 | not_started | Contributor colors | [`contributor-colors.md`](./contributor-colors.md) |
+Every feature MD uses the same human-written body:
 
-### Collaboration / governance
+1. **User Story** — who benefits, in one sentence.
+2. **Problem Statement** — what's broken without this feature.
+3. **Solution Statement** — what we ship.
+4. **Reference Contracts** — upstream code we draw from.
+5. **Implementation Steps** — ordered checklist.
 
-| # | Status | Component | File |
-|---|--------|-----------|------|
-| 7 | in_progress | PR governance & `[vaultaname]` | [`pr-governance.md`](./pr-governance.md) |
-| 8 | not_started | Collaboration flow | [`collaboration-flow.md`](./collaboration-flow.md) |
+Two more sections are appended automatically by `frontend/scripts/build-plan.ts` when `source.path` is set:
 
-### Chain — Annie flavor
+6. **Full code snippet** — verbatim contents of the source file (always mirrors the real code).
+7. **Update with changes** — direct link to the source file in the repo.
 
-| # | Status | Component | File |
-|---|--------|-----------|------|
-| 9  | in_progress | Annie flavor overview | [`flavor-annie.md`](./flavor-annie.md) |
-| 10 | not_started | Chain & passkey UX flow | [`chain-passkey-flow.md`](./chain-passkey-flow.md) |
-| 11 | not_started | Lazy account materialization | [`lazy-account-materialization.md`](./lazy-account-materialization.md) |
-| 12 | not_started | Programmable permissions + passkeys | [`programmable-permissions.md`](./programmable-permissions.md) |
-| 13 | not_started | Enhanced resource model | [`enhanced-resource-model.md`](./enhanced-resource-model.md) |
-| 14 | not_started | KV storage model | [`kv-storage-model.md`](./kv-storage-model.md) |
-| 15 | not_started | Events & indexing | [`events-indexing.md`](./events-indexing.md) |
-| 16 | not_started | Custom system contracts | [`custom-system-contracts.md`](./custom-system-contracts.md) |
-| 17 | not_started | Consensus & protocol tweaks | [`consensus-protocol-tweaks.md`](./consensus-protocol-tweaks.md) |
-| 18 | in_progress | Reference repositories | [`reference-repos.md`](./reference-repos.md) |
+## Editing rules
 
-## How the map reads this folder
-
-1. `frontend/scripts/build-plan.ts` walks `masterplan/*.md`, parses frontmatter, and emits `frontend/src/data/plan.json`.
-2. The D3 force layout draws one node per file, sized by `progress`, edged by `depends_on`, and colored on a continuous orange→green scale.
-3. Clicking a node opens the rendered markdown in a side panel.
-4. A signed-in user (Vaulta) can claim ownership of a node from the side panel; this opens a pre-filled PR titled `[<actor>] claim <node-id>`.
-
-## Conventions
-
-- One concept per file; keep MDs short.
-- Always update `progress` and `status` when you ship a change.
-- New nodes? Add the file, add a row above, link any `depends_on` ids.
+- One concept per file; keep nodes short.
+- Always update `progress` and `status` when you ship.
+- New nodes? Add the file, set its `parent`, and open a PR with `[<your-vaulta-name>]` in the title.
+- Don't break the 3-level cap; if something feels deeper, it probably wants its own peer.

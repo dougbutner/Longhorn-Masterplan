@@ -1,46 +1,33 @@
 ---
 id: custom-system-contracts
-title: Custom system contracts
-status: not_started
-progress: 10
-owners: [annie]
-depends_on: [flavor-annie, lazy-account-materialization, programmable-permissions]
-tags: [chain, contracts]
+title: Custom System Contracts
+parent: longhorn
+status: in_progress
+progress: 15
+order: 6
+tags: [divergence, contracts]
 ---
 
-# Custom system contracts
+## User Story
 
-Annie's privileged contracts extend stock Antelope without rewriting them.
+As a Longhorn contract author, I have a coherent set of privileged contracts that compose cleanly with each other — identity, lazy materialization, passkey auth, events, subsidy — without each being a one-off fork.
 
-## Contracts
+## Solution Statement
 
-| Contract        | Role | Derived from |
-|-----------------|------|--------------|
-| `eosio.system`  | core resources, BP voting, account ops | `AntelopeIO/reference-contracts` + WAX & ENF |
-| `eosio.token`   | fungible tokens + `on_transfer` lazy hook | `AntelopeIO/reference-contracts` |
-| `eosio.boot`    | bootstrap (genesis) | `AntelopeIO/reference-contracts` |
-| `eosio.proton`  | identity / `@names` / KYC verification | `XPRNetwork/proton.contracts` |
-| `eosio.passkey` | programmable permissions, WebAuthn auth | Tonomy permissions + new code |
-| `eosio.kv`      | KV helpers, TS table sugar | `XPRNetwork/ts-smart-contracts` |
-| `eosio.events`  | event registry + emit                  | new |
-| `eosio.subsidy` | free-tier CPU/NET billing               | new |
+Ship a coherent privileged-contract suite as a single overlay: `eosio.system`, `eosio.token`, `eosio.proton`-style identity, `eosio.passkey`, `eosio.events`, `eosio.subsidy`, `eosio.kv`. Each is a small additive overlay on a single declared upstream so divergences stay auditable.
 
-## Privileged actions (excerpt)
+## Problem Statement
 
-```cpp
-// eosio.proton
-void verify_identity(name account, bytes proof);
-void set_verified(name account, bool status);
+Privileged actions historically scatter across forks (one ecosystem adds identity, another adds free tier, another adds events). Mixing and matching means contracts behave differently depending on the chain. Longhorn picks a coherent set, ships them together, and tracks each one against its upstream.
 
-// eosio.system
-void create_account(name creator, name newacc, public_key key, bool lazy = true);
-void on_transfer(name from, name to, asset quantity, std::string memo);
+## Reference Contracts
 
-// eosio.passkey
-void set_permission_logic(name account, name permission, std::vector<uint8_t> wasm_logic);
-void auth_passkey(name account, signature sig, bytes data);
-```
+- [`AntelopeIO/reference-contracts`](https://github.com/AntelopeIO/reference-contracts) — base for system + token + boot.
+- [`XPRNetwork/proton.contracts`](https://github.com/XPRNetwork/proton.contracts) — identity / `@names`.
+- [`Tonomy-Foundation/Tonomy-ID`](https://github.com/Tonomy-Foundation/Tonomy-ID) — passkeys / programmable permissions.
 
-## Build
+## Implementation Steps
 
-Each contract sits in `flavors/Annie/contracts/<name>/`. The `flavors/Annie/scripts/build.sh` script invokes CDT for each contract and outputs WASM + ABI to `flavors/Annie/build/`.
+1. Track each contract as a child node here with its own status + source mirror.
+2. Each contract README declares `Upstream:` + `Upstream-path:` so divergences are diff-able against the upstream snapshot.
+3. Ship `flavors/Annie/scripts/build.sh` to compile the whole suite via CDT in one pass.

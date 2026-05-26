@@ -1,37 +1,37 @@
 ---
 id: programmable-permissions
-title: Programmable permissions + passkeys
-status: not_started
+title: Programmable Permissions + Passkeys
+parent: longhorn
+status: in_progress
 progress: 10
-owners: [annie]
-depends_on: [flavor-annie]
-tags: [chain, contracts, passkey]
+order: 2
+tags: [divergence, auth, passkey]
+source:
+  path: flavors/Annie/contracts/eosio.passkey/src/eosio.passkey.cpp
+  url: https://github.com/dougbutner/Longhorn-Masterplan/blob/main/flavors/Annie/contracts/eosio.passkey/src/eosio.passkey.cpp
 ---
 
-# Programmable permissions + native passkey support
+## User Story
 
-Extensible auth logic — permissions are evaluated by user-supplied WASM, and WebAuthn / passkey signatures are first-class on chain.
+As a user, I sign transactions on Longhorn with the same passkey I use to log into web apps — no seed phrase, no browser extension, no separate signer install.
 
-## Contract surface
+## Problem Statement
 
-```cpp
-// eosio.passkey
-void set_permission_logic(name account, name permission, std::vector<uint8_t> wasm_logic);
-void auth_passkey(name account, signature sig, bytes data);
-```
+Antelope authorities only natively support `K1` / `R1` keys. WebAuthn (the actual standard browsers and mobile OSes implement for passwordless auth) isn't a first-class citizen. Bolt-on signers exist but they're fragile and ecosystem-specific.
 
-## Design notes
+## Solution Statement
 
-- **WASM permission programs** receive `(action, context)` and return `bool authorized`. The on-chain VM is the same WASM runtime used for contracts, sandboxed harder (no DB writes).
-- **WebAuthn keys** are stored alongside K1/R1 keys; the existing `permission_level_weight` carries an additional kind flag.
-- The `Longhorn wallet → passkey → first action → materialize` path described in `chain-passkey-flow.md` is implemented by `auth_passkey` + the lazy-create hook.
+Two complementary additions: (1) a sandboxed WASM "permission program" that any account can install to evaluate `(action, context) → bool`, and (2) native WebAuthn signature verification (`auth_passkey`) so a passkey can be a weighted entry in any authority — including `active` — alongside K1/R1 keys.
 
-## Compatibility
+## Reference Contracts
 
-- Existing keyed permissions keep working — programmable permissions are *additive*.
-- Off-chain tooling (history, indexers) must learn about the new sig type; we ship a `kind` byte ahead of the signature payload for forward compatibility.
+- [`Tonomy-Foundation/Tonomy-ID`](https://github.com/Tonomy-Foundation/Tonomy-ID) — passkey + DID precedent.
+- [`AntelopeIO/reference-contracts`](https://github.com/AntelopeIO/reference-contracts) — authority + permission_level structures.
 
-## References
+## Implementation Steps
 
-- Tonomy permissions library — `flavors/Annie/upstream/tonomy-id/`.
-- Web standards: WebAuthn level 2, COSE algs (ES256, EdDSA).
+1. Reserve a new `kind` byte for WebAuthn signatures in the wire format.
+2. Add `eosio.passkey::auth_passkey(account, sig, data)` action that verifies a WebAuthn assertion.
+3. Add `eosio.passkey::set_permission_logic(account, permission, wasm_logic)` action that stores a sandboxed WASM module evaluated during authorization.
+4. Allow the existing `authority` struct to reference a passkey credential descriptor (stored in `eosio.kv`).
+5. Ship a wallet integration so creating a Longhorn account creates a passkey by default.
