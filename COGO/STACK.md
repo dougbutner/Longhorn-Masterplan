@@ -1,11 +1,21 @@
-# Preferred stack
+# Preferred stack — Longhorn Masterplan
 
-- **FE:** Next.js App Router, TS, Tailwind, shadcn/ui  
-- **BE:** Node, Hono, REST-first  
-- **DB:** PostgreSQL, Drizzle  
-- **Auth:** Better Auth (+ wallet when relevant)  
-- **AI:** OpenAI, RAG, agents  
-- **Infra:** Vercel, Cloudflare, Docker  
-- **Test:** Vitest, Playwright  
+## Masterplan UI (`frontend/`)
 
-**Avoid:** Redux unless needed; over-abstraction; huge config; unreadable “enterprise” patterns.
+- **Build:** Vite + React 18 + TypeScript
+- **Styling:** Tailwind CSS (zero-runtime, dark-first)
+- **Viz:** D3 v7 (force-directed completion map, orange → green gradient)
+- **Markdown:** `react-markdown` + `remark-gfm` + `gray-matter`
+- **Auth (Antelope):** Wharfkit (`@wharfkit/session`, `@wharfkit/web-renderer`, `@wharfkit/wallet-plugin-anchor`, `@wharfkit/wallet-plugin-webauthn`)
+- **State:** React Context + URL state; no Redux
+- **Test:** Vitest + Playwright (e2e for sign-in gate)
+
+## Chain (`flavors/Annie/`)
+
+- **Base:** AntelopeIO/spring + AntelopeIO/cdt + AntelopeIO/reference-contracts
+- **Overlays:** XPRNetwork (lazy accounts, identity), Tonomy (passkeys, programmable permissions), WAX (perf, NFT-friendly), WIRE (universal transactions), VaultaFoundation (Vaulta system contracts), eosnetworkfoundation/eos-system-contracts
+- **Contract language:** C++ via CDT (primary); TypeScript via XPRNetwork `ts-smart-contracts` for KV / modern patterns
+
+## Avoid
+
+Redux, Next.js for this repo (static viz), heavy enterprise abstractions, vendoring binary chain artifacts.

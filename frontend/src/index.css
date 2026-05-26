@@ -1,0 +1,21 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html, body, #root { height: 100%; }
+  :root { color-scheme: dark; }
+}
+
+@layer utilities {
+  .node-pulse {
+    animation: node-pulse 2.4s ease-in-out infinite;
+  }
+  @keyframes node-pulse {
+    0%, 100% { filter: drop-shadow(0 0 0 rgba(249, 115, 22, 0.0)); }
+    50%      { filter: drop-shadow(0 0 6px rgba(249, 115, 22, 0.55)); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .node-pulse { animation: none; }
+  }
+}

@@ -1,0 +1,51 @@
+name: pr-vaulta-name
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  pull-requests: write
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate [vaultaname] prefix
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const title = context.payload.pull_request.title || '';
+            const match = title.match(/^\[([a-zA-Z0-9_\-\.]+)\]/);
+            if (!match) {
+              core.setFailed(`PR title must start with [<vaultaname>]: "${title}"`);
+              return;
+            }
+            const vaulta = match[1];
+            const raw = fs.readFileSync('CONTRIBUTORS.json', 'utf8');
+            const data = JSON.parse(raw);
+            const known = Object.keys(data.contributors || {});
+            if (!known.includes(vaulta)) {
+              core.setFailed(
+                `vaulta name "${vaulta}" not in CONTRIBUTORS.json (known: ${known.join(', ')}). ` +
+                `Add an entry in the same PR.`
+              );
+              return;
+            }
+            const label = `vaulta:${vaulta}`;
+            const color = (data.contributors[vaulta].color || '#888888').replace('#', '');
+            try {
+              await github.rest.issues.getLabel({ ...context.repo, name: label });
+            } catch {
+              await github.rest.issues.createLabel({
+                ...context.repo, name: label, color, description: `Authored by ${vaulta}`,
+              });
+            }
+            await github.rest.issues.addLabels({
+              ...context.repo, issue_number: context.payload.pull_request.number, labels: [label],
+            });
+            core.info(`Validated PR by ${vaulta}; labelled ${label}.`);

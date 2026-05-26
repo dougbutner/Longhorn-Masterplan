@@ -1,0 +1,13 @@
+# Default
+*                               @dougbutner
+
+# Frontend / masterplan UI
+/frontend/                      @dougbutner
+/masterplan/                    @dougbutner @annie
+
+# Chain — Annie flavor
+/flavors/Annie/                 @annie
+
+# Governance & CI
+/.github/                       @dougbutner
+/CONTRIBUTORS.json              @dougbutner @annie

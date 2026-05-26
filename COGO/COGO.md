@@ -29,4 +29,9 @@ Understand goal → constraints → plan → scaffold → build incrementally �
 | `/test-plan` | `Human/test-plan.md` |
 | `/release-notes` | `Human/release-notes.md` |
 | Prod outage, incident, urgent staging debug | `Human/incident-or-debug.md` |
+| `/pull-upstream`, refresh chain references | `flavors/scripts/pull-references.sh` |
+| `/build-annie`, compile Annie contracts | `flavors/Annie/scripts/build.sh` |
+| `/diff-upstream`, see Annie vs each upstream | `flavors/Annie/scripts/diff-upstream.sh` |
+| `/build-plan`, regenerate the D3 map data | `cd frontend && pnpm build:plan` |
+| Add a new masterplan node | Create `masterplan/<id>.md` with frontmatter, add row in `masterplan/README.md`, open PR `[<vaultaname>] add <id>` |
 | Unclear intent | Ask **one** clarifying question, then continue. |
