@@ -34,6 +34,25 @@ Re-run manually anytime with `pnpm build:plan`.
 - `src/lib/wharfkit.ts` — SessionKit singleton.
 - `scripts/build-plan.ts` — masterplan → plan.json builder.
 
+## Suggest PR (GitHub)
+
+**Suggest PR** always tries to get your edits onto GitHub:
+
+1. **With `GITHUB_TOKEN` on the worker** (recommended for production): creates a branch, commits your `.md`, opens a real pull request.
+   ```bash
+   cd frontend
+   npx wrangler secret put GITHUB_TOKEN   # fine-grained or classic PAT with repo contents + PRs
+   npm run deploy
+   ```
+   Token needs `contents: write` and `pull_requests: write` on `dougbutner/Longhorn-Masterplan`.
+
+2. **Without token (local / fallback):** copies the full file to your clipboard, downloads a backup `.md`, and opens:
+   - GitHub’s **web editor** for that file (forks automatically if needed)
+   - The **new PR** form with title/body prefilled  
+   Paste in the editor, commit, then submit the PR.
+
+Local dev with API: run `npm run dev:worker` in one terminal and `npm run dev` in another (Vite proxies `/api` to the worker).
+
 ## Keyboard
 
 | Key | Action |

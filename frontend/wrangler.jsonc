@@ -4,8 +4,10 @@
   // Match the Workers & Pages project in the Cloudflare dashboard.
   "compatibility_date": "2026-05-26",
   "compatibility_flags": ["nodejs_compat"],
+  "main": "worker/index.ts",
   "assets": {
     "directory": "./dist",
+    "binding": "ASSETS",
     "not_found_handling": "single-page-application"
   }
 }

@@ -18,9 +18,20 @@ export interface PlanNode {
   order: number;
   source?: PlanSource;
   body: string;
+  editableBody: string;
+  frontmatter: Record<string, unknown>;
   file: string;
   depth: number;
   children: string[];
+}
+
+export interface PendingPR {
+  number: number;
+  title: string;
+  vaulta: string | undefined;
+  url: string;
+  updatedAt: string;
+  draft: boolean;
 }
 
 export interface Contributor {

@@ -35,7 +35,12 @@ interface PlanNode {
   tags: string[];
   order: number;
   source?: PlanSource;
+  /** Rendered body (includes mirrored contract sections when applicable). */
   body: string;
+  /** Markdown body from the file only — safe to edit in the UI. */
+  editableBody: string;
+  /** Frontmatter fields for reconstructing masterplan/*.md on PR export. */
+  frontmatter: Record<string, unknown>;
   file: string;
   depth: number;
   children: string[];
@@ -112,6 +117,8 @@ function parseNode(filePath: string): PlanNode | null {
 
   const parent = d.parent === null || d.parent === undefined ? null : String(d.parent);
 
+  const editableBody = fm.content.trim();
+
   const node: PlanNode = {
     id: d.id,
     title: d.title,
@@ -122,7 +129,9 @@ function parseNode(filePath: string): PlanNode | null {
     tags: Array.isArray(d.tags) ? (d.tags as unknown[]).map(String) : [],
     order: typeof d.order === "number" ? d.order : 100,
     source,
-    body: appendMirrorSections(fm.content.trim(), source),
+    body: appendMirrorSections(editableBody, source),
+    editableBody,
+    frontmatter: { ...d },
     file: filePath.replace(repoRoot + "/", ""),
     depth: 0,
     children: [],

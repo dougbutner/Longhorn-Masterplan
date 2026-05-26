@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef } from "react";
 import * as d3 from "d3";
 import type { Contributors, PlanNode } from "../types";
-import { colorForProgress, statusIcon } from "../theme";
+import { colorForProgress, statusIcon, viz } from "../theme";
 
 interface Props {
   nodes: PlanNode[];
@@ -114,7 +114,7 @@ export function ProgressMap({
 
     const linkSel = g
       .append("g")
-      .attr("stroke", "#334155")
+      .attr("stroke", viz.link)
       .attr("stroke-width", 1.2)
       .selectAll("line")
       .data(simLinks)
@@ -137,11 +137,11 @@ export function ProgressMap({
     nodeG
       .append("circle")
       .attr("r", (d) => radiusFor(d.progress, d.isRoot))
-      .attr("fill", (d) => (d.isRoot ? "#1e293b" : colorForProgress(d.progress)))
+      .attr("fill", (d) => (d.isRoot ? viz.rootFill : colorForProgress(d.progress)))
       .attr("stroke", (d) => {
-        if (d.isRoot) return "#f97316";
+        if (d.isRoot) return viz.rootStroke;
         const owner = d.owners[d.owners.length - 1];
-        return owner && contributors[owner] ? contributors[owner].color : "#1e293b";
+        return owner && contributors[owner] ? contributors[owner].color : viz.badgeStroke;
       })
       .attr("stroke-width", (d) => (d.isRoot ? 4 : 3))
       .attr("class", (d) => (d.status === "in_progress" && !d.isRoot ? "node-pulse" : ""));
@@ -151,9 +151,10 @@ export function ProgressMap({
       .append("text")
       .attr("text-anchor", "middle")
       .attr("dy", "0.35em")
-      .attr("fill", "#f8fafc")
-      .attr("font-weight", "700")
-      .attr("font-size", 14)
+      .attr("fill", viz.label)
+      .attr("font-weight", "600")
+      .attr("font-size", 13)
+      .attr("font-family", "DM Sans, system-ui, sans-serif")
       .text("Longhorn");
 
     nodeG
@@ -161,7 +162,7 @@ export function ProgressMap({
       .append("text")
       .attr("text-anchor", "middle")
       .attr("dy", "0.35em")
-      .attr("fill", "#0f172a")
+      .attr("fill", viz.iconOnNode)
       .attr("font-weight", "600")
       .attr("font-size", 12)
       .text((d) => statusIcon[d.status] ?? "○");
@@ -171,8 +172,9 @@ export function ProgressMap({
       .append("text")
       .attr("text-anchor", "middle")
       .attr("dy", (d) => radiusFor(d.progress, false) + 14)
-      .attr("fill", "#e2e8f0")
+      .attr("fill", viz.label)
       .attr("font-size", 11)
+      .attr("font-family", "DM Sans, system-ui, sans-serif")
       .text((d) => d.title);
 
     nodeG
@@ -183,19 +185,20 @@ export function ProgressMap({
         return `translate(${r + 4}, -${r})`;
       })
       .call((sel) => {
-        sel.append("circle").attr("r", 9).attr("fill", "#1e293b").attr("stroke", "#475569");
+        sel.append("circle").attr("r", 9).attr("fill", viz.badgeFill).attr("stroke", viz.badgeStroke);
         sel
           .append("text")
           .attr("text-anchor", "middle")
           .attr("dy", "0.35em")
           .attr("font-size", 10)
-          .attr("fill", "#e2e8f0")
+          .attr("fill", viz.labelMuted)
           .text((d) => `+${(d as SimNode).hiddenChildren}`);
       });
 
     nodeG
       .filter((d) => d.id === selectedId)
       .select("circle")
+      .attr("stroke", viz.selectedGlow)
       .attr("stroke-width", 5);
 
     const sim = d3
@@ -289,7 +292,7 @@ export function ProgressMap({
   }, [simNodes, simLinks, contributors, selectedId, onSelect, onToggleCollapse]);
 
   return (
-    <div ref={wrapRef} className="w-full h-full bg-slate-950">
+    <div ref={wrapRef} className="w-full h-full bg-transparent">
       <svg ref={svgRef} className="w-full h-full" />
     </div>
   );

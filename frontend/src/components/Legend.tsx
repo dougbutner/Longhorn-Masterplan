@@ -1,22 +1,41 @@
 import type { Contributors } from "../types";
 
-export function Legend({ contributors }: { contributors: Contributors }) {
+export function Legend({
+  contributors,
+  empty = false,
+}: {
+  contributors: Contributors;
+  empty?: boolean;
+}) {
   const entries = Object.entries(contributors);
   return (
-    <div className="absolute bottom-3 left-3 bg-slate-900/80 backdrop-blur border border-slate-800 rounded-lg px-3 py-2 text-xs">
-      <p className="text-slate-400 mb-1 uppercase tracking-wider text-[10px]">Contributors</p>
-      <ul className="flex flex-col gap-1">
+    <div className="absolute bottom-4 left-4 glass-panel px-4 py-3 text-xs z-10 max-w-[220px]">
+      <p className="text-[10px] font-semibold uppercase tracking-wider text-lh-gold mb-2">
+        Longhorns
+      </p>
+      {empty ? (
+        <p className="text-lh-ivory-muted text-[11px] leading-relaxed">No Longhorns yet.</p>
+      ) : (
+      <ul className="flex flex-col gap-1.5">
         {entries.map(([id, c]) => (
           <li key={id} className="flex items-center gap-2">
-            <span className="h-2.5 w-2.5 rounded-full" style={{ background: c.color }} />
-            <span className="text-slate-200">{id}</span>
-            <span className="text-slate-500 font-mono">{c.vaulta}</span>
+            <span
+              className="h-2.5 w-2.5 rounded-full shrink-0"
+              style={{ background: c.color, boxShadow: `0 0 6px ${c.color}66` }}
+            />
+            <span className="text-lh-ivory font-medium">{id}</span>
+            <span className="text-lh-ivory-muted font-mono text-[10px] truncate">{c.vaulta}</span>
           </li>
         ))}
       </ul>
-      <p className="text-slate-400 mt-2 mb-1 uppercase tracking-wider text-[10px]">Progress</p>
-      <div className="h-2 w-40 rounded-full bg-gradient-to-r from-brand-orange to-brand-green" />
-      <div className="flex justify-between text-[10px] text-slate-500 mt-0.5">
+      )}
+      <p className="text-[10px] font-semibold uppercase tracking-wider text-lh-gold mt-3 mb-1.5">
+        Progress
+      </p>
+      <div className="h-1.5 w-full rounded-full bg-[rgba(245,240,230,0.12)] overflow-hidden">
+        <div className="h-full w-full rounded-full bg-lh-gold opacity-80" />
+      </div>
+      <div className="flex justify-between text-[10px] text-lh-ivory-muted mt-1 font-mono">
         <span>0%</span>
         <span>100%</span>
       </div>
