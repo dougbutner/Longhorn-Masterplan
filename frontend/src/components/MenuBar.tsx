@@ -1,3 +1,4 @@
+import { LonghornLogo } from "./LonghornLogo";
 import { PendingPRs } from "./PendingPRs";
 import type { Contributors, PendingPR, SessionInfo } from "../types";
 
@@ -49,12 +50,7 @@ export function MenuBar({
 
   return (
     <header className="glass-bar flex items-center gap-3 px-5 py-3 shrink-0 z-20">
-      <h1 className="text-sm font-semibold tracking-wide">
-        <span className="text-lh-gold-light">Longhorn</span>
-        <span className="text-lh-ivory-muted font-normal ml-2">Masterplan</span>
-      </h1>
-
-      <div className="ml-2 flex items-center gap-2">
+      <div className="flex items-center gap-2">
         <select
           value={filterTag ?? ""}
           onChange={(e) => onFilterTag(e.target.value || undefined)}
@@ -139,6 +135,12 @@ export function MenuBar({
         >
           {activeDisabled ? "Activate" : "Active"}
         </button>
+
+        <h1 className="flex items-center gap-2.5 pl-3 ml-1 border-l border-[color:var(--glass-border)] text-sm font-semibold tracking-wide shrink-0">
+          <span className="text-lh-gold-light">Longhorn</span>
+          <span className="text-lh-ivory-muted font-normal">Masterplan</span>
+          <LonghornLogo className="h-7 w-7" />
+        </h1>
       </div>
     </header>
   );

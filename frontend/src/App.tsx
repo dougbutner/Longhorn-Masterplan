@@ -7,6 +7,7 @@ import { useSession } from "./hooks/useSession";
 import { useClaims } from "./hooks/useClaims";
 import { usePendingPRs } from "./hooks/usePendingPRs";
 import { useFullscreen } from "./hooks/useFullscreen";
+import { LonghornAccent } from "./components/LonghornAccent";
 import { SuggestPRNotice } from "./components/SuggestPRNotice";
 import { githubEditUrl } from "./lib/constants";
 import { suggestNodePR, type SuggestPRResult } from "./lib/preparePr";
@@ -130,7 +131,8 @@ export default function App() {
 
   return (
     <div className="h-full flex flex-col relative overflow-hidden bg-lh-black">
-      <div className="pointer-events-none absolute inset-0 bg-lh-radial opacity-80" aria-hidden />
+      <div className="pointer-events-none absolute inset-0 bg-lh-radial opacity-80 z-0" aria-hidden />
+      <LonghornAccent />
       <MenuBar
         session={session}
         sessionReady={ready}
@@ -152,7 +154,7 @@ export default function App() {
         longhornOptions={longhornOptions}
         onFilterLonghorn={setFilterOwner}
       />
-      <main className="flex-1 flex min-h-0 relative z-0">
+      <main className="flex-1 flex min-h-0 relative z-[2]">
         <div
           ref={wrapRef}
           className="relative flex-1 min-w-0 border-r border-[color:var(--glass-border)]"

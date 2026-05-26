@@ -376,6 +376,59 @@
   }
 }
 
+@layer components {
+  /* Header logo — black backdrop blends away on dark UI */
+  .lh-logo {
+    mix-blend-mode: lighten;
+  }
+
+  @keyframes lh-logo-wobble {
+    0%,
+    100% {
+      transform: rotate(0deg) scale(1);
+    }
+    15% {
+      transform: rotate(-5deg) scale(1.02);
+    }
+    30% {
+      transform: rotate(5deg) scale(1.02);
+    }
+    45% {
+      transform: rotate(-3deg) scale(1.01);
+    }
+    60% {
+      transform: rotate(3deg) scale(1.01);
+    }
+    75% {
+      transform: rotate(-1.5deg) scale(1);
+    }
+  }
+
+  .lh-logo--wobble {
+    animation: lh-logo-wobble 0.55s ease-in-out;
+    transform-origin: center bottom;
+  }
+
+  /* Oversized accent — one horn, 20% via lighten blend */
+  .lh-horn-accent {
+    z-index: 1;
+  }
+
+  .lh-horn-accent__img {
+    position: absolute;
+    top: 50%;
+    left: -42%;
+    width: 165vw;
+    min-width: 1200px;
+    max-width: none;
+    height: auto;
+    opacity: 0.2;
+    mix-blend-mode: lighten;
+    transform: translateY(-50%);
+    user-select: none;
+  }
+}
+
 @layer utilities {
   .node-pulse {
     animation: node-pulse-gold 2.4s ease-in-out infinite;
@@ -394,6 +447,14 @@
   @media (prefers-reduced-motion: reduce) {
     .node-pulse {
       animation: none;
+    }
+
+    .lh-logo--wobble {
+      animation: none;
+    }
+
+    .lh-horn-accent {
+      transform: none !important;
     }
   }
 }
