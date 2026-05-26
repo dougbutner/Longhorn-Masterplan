@@ -12,7 +12,7 @@ The masterplan UI uses **Wharfkit SessionKit** to authenticate participants agai
 
 ## Contributor binding
 
-Every PR title generated through the UI is prefixed `[<actor>]` (e.g. `[annie] add lazy account materialization`). `CONTRIBUTORS.json` maps `actor → color`. CI validates the prefix on every PR.
+Every PR title generated through the UI is prefixed `[<actor>]` (e.g. `[myaccount] add lazy account materialization`). CI validates the prefix on every PR. The UI assigns each signed-in actor a stable random color from a bright hue palette (stored in the browser); `CONTRIBUTORS.json` is optional for repo-wide overrides.
 
 ## Why not Better Auth here
 

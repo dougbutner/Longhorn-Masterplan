@@ -1,14 +1,1 @@
-{
-  "annie": {
-    "color": "#e11d48",
-    "github": "annie",
-    "vaulta": "annie.evm",
-    "role": "chain"
-  },
-  "dougbutner": {
-    "color": "#0ea5e9",
-    "github": "dougbutner",
-    "vaulta": "doug.evm",
-    "role": "frontend"
-  }
-}
+{}

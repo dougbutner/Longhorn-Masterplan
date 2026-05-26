@@ -9,7 +9,7 @@ Build **Longhorn**, a low-breakage Antelope release that retains 12-char account
 1. `masterplan/` — feature tree rooted at `longhorn`. Each MD has the 7-section template (User Story / Problem / Solution / Reference Contracts / Implementation Steps; build script appends the live code snippet + update link).
 2. `frontend/` — Vite + React + TS UI. Single page; D3 force layout with Longhorn pinned at center; nodes colored orange→green by `progress`; click → markdown side panel including mirrored source code.
 3. `flavors/Annie/` — implementation slot for the chain work (hidden from front-of-house). Source files here are what the masterplan MDs mirror via `source.path`.
-4. Governance — every PR title must include `[vaultaname]`; contributors live in `CONTRIBUTORS.json` with a color assignment used by the UI.
+4. Governance — every PR title must include `[vaultaname]`; the UI assigns contributors a color on sign-in (optional overrides in `CONTRIBUTORS.json`).
 
 ## Recent Decisions
 

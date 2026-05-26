@@ -1,4 +1,4 @@
-import { branchName, createPullRequestWithFile, GitHubApiError } from "./github";
+import { branchName, createBranchWithFile, GitHubApiError } from "./github";
 
 interface Env {
   ASSETS: Fetcher;
@@ -63,7 +63,7 @@ async function handleSuggestPr(request: Request, env: Env): Promise<Response> {
   const commitMessage = `${prTitle}\n\nCo-authored-by: ${actor} <${actor}@users.noreply.github.com>`;
 
   try {
-    const { prUrl, branch: head } = await createPullRequestWithFile({
+    const { branch: head, editUrl, compareUrl } = await createBranchWithFile({
       token: env.GITHUB_TOKEN,
       branch,
       filePath,
@@ -72,7 +72,7 @@ async function handleSuggestPr(request: Request, env: Env): Promise<Response> {
       prTitle,
       prBody: prBody ?? "",
     });
-    return json({ ok: true, configured: true, prUrl, branch: head });
+    return json({ ok: true, configured: true, branch: head, editUrl, compareUrl });
   } catch (e) {
     const message = e instanceof Error ? e.message : "Unknown error";
     const detail = e instanceof GitHubApiError ? e.detail : undefined;

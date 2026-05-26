@@ -2,8 +2,7 @@ import { useCallback, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { resetEasyMDEDom } from "../lib/teardownEasyMDE";
-import { EasyMarkdownEditor, type EasyMarkdownEditorHandle } from "./EasyMarkdownEditor";
+import { SplitMarkdownEditor, type SplitMarkdownEditorHandle } from "./SplitMarkdownEditor";
 
 interface Props {
   open: boolean;
@@ -38,18 +37,11 @@ export function FullscreenEditor({
   onDiscard,
   onSuggestPR,
 }: Props) {
-  const editorRef = useRef<EasyMarkdownEditorHandle>(null);
+  const editorRef = useRef<SplitMarkdownEditorHandle>(null);
 
   const handleClose = useCallback(() => {
-    editorRef.current?.destroy();
-    resetEasyMDEDom();
     onClose();
   }, [onClose]);
-
-  useEffect(() => {
-    if (open) return;
-    resetEasyMDEDom();
-  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -69,7 +61,6 @@ export function FullscreenEditor({
     return () => {
       document.body.style.overflow = prevOverflow;
       window.removeEventListener("keydown", onKey, true);
-      resetEasyMDEDom();
     };
   }, [open, handleClose]);
 
@@ -83,7 +74,7 @@ export function FullscreenEditor({
 
   const overlay = (
     <div
-      className="lh-editor-overlay fixed inset-0 z-[200] flex flex-col bg-lh-black"
+      className="lh-editor-overlay fixed inset-0 z-[200] flex flex-col bg-lh-black/90 backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
       aria-label={`Editor: ${title}`}
@@ -98,18 +89,17 @@ export function FullscreenEditor({
         </button>
       </header>
 
-      <div className="flex-1 min-h-0 px-4 py-3 overflow-hidden">
+      <div className="flex-1 min-h-0 py-4 overflow-hidden">
         {readOnly ? (
-          <div className="prose-lh h-full overflow-y-auto rounded-lg border border-[color:var(--glass-border)] p-4 glass">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>{value}</ReactMarkdown>
+          <div className="lh-split-editor">
+            <div className="lh-split-editor__shell lh-split-editor__shell--readonly max-w-[720px] mx-auto">
+              <div className="prose-lh lh-split-editor__preview-scroll w-full">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>{value}</ReactMarkdown>
+              </div>
+            </div>
           </div>
         ) : (
-          <EasyMarkdownEditor
-            ref={editorRef}
-            key={syncKey}
-            value={value}
-            onChange={onChange}
-          />
+          <SplitMarkdownEditor ref={editorRef} key={syncKey} value={value} onChange={onChange} />
         )}
       </div>
 

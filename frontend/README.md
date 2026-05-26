@@ -38,7 +38,7 @@ Re-run manually anytime with `pnpm build:plan`.
 
 **Suggest PR** always tries to get your edits onto GitHub:
 
-1. **With `GITHUB_TOKEN` on the worker** (recommended for production): creates a branch, commits your `.md`, opens a real pull request.
+1. **With `GITHUB_TOKEN` on the worker** (recommended for production): creates a branch with your `.md` already committed, then opens GitHub **compare** (diff + Create PR) and **edit** (file pre-filled on that branch).
    ```bash
    cd frontend
    npx wrangler secret put GITHUB_TOKEN   # fine-grained or classic PAT with repo contents + PRs

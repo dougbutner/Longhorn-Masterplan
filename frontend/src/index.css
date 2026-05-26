@@ -235,71 +235,144 @@
     color: var(--lh-gold);
   }
 
-  /* EasyMDE inside our overlay — never use CodeMirror’s document-level fullscreen */
-  .lh-editor-overlay .easymde-host,
-  .lh-editor-overlay .EasyMDEContainer {
+  /* Split markdown editor — centered write + fixed preview column */
+  .lh-split-editor {
+    height: 100%;
     display: flex;
-    flex-direction: column;
+    justify-content: center;
+    align-items: stretch;
+    padding: 0 1rem;
+    min-height: 0;
+  }
+
+  .lh-split-editor__shell {
+    display: flex;
+    width: 100%;
+    max-width: 1104px;
+    gap: 0.75rem;
     height: 100%;
     min-height: 0;
+    padding: 0.75rem;
+    border-radius: 1rem;
+    border: 1px solid rgba(245, 240, 230, 0.12);
+    background: rgba(18, 18, 18, 0.42);
+    backdrop-filter: blur(20px) saturate(140%);
+    -webkit-backdrop-filter: blur(20px) saturate(140%);
+    box-shadow:
+      inset 0 1px 0 rgba(245, 240, 230, 0.08),
+      0 12px 40px rgba(0, 0, 0, 0.45);
+    transition:
+      background-color 0.25s ease,
+      border-color 0.25s ease,
+      box-shadow 0.25s ease;
   }
 
-  .lh-editor-overlay .EasyMDEContainer.sided--no-fullscreen {
+  .lh-split-editor__shell:focus-within {
+    background: rgba(28, 28, 28, 0.62);
+    border-color: rgba(212, 175, 55, 0.35);
+    box-shadow:
+      inset 0 1px 0 rgba(240, 215, 140, 0.12),
+      0 16px 48px rgba(0, 0, 0, 0.5),
+      0 0 0 1px rgba(212, 175, 55, 0.08);
+  }
+
+  .lh-split-editor__shell--readonly {
+    max-width: 720px;
+  }
+
+  .lh-split-editor__write {
+    flex: 1 1 720px;
+    max-width: 720px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    padding: 0.5rem 0.65rem;
+    border-radius: 0.65rem;
+    background: rgba(10, 10, 10, 0.28);
+    transition: background-color 0.25s ease;
+  }
+
+  .lh-split-editor__shell:focus-within .lh-split-editor__write {
+    background: rgba(10, 10, 10, 0.4);
+  }
+
+  .lh-split-editor__preview {
+    flex: 0 0 360px;
+    width: 360px;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 0.5rem 0.65rem;
+    border-radius: 0.65rem;
+    background: rgba(245, 240, 230, 0.04);
+    border: 1px solid rgba(245, 240, 230, 0.06);
+    opacity: 0.72;
+    transition:
+      opacity 0.25s ease,
+      background-color 0.25s ease,
+      border-color 0.25s ease;
+  }
+
+  .lh-split-editor__shell:focus-within .lh-split-editor__preview {
+    opacity: 0.92;
+    background: rgba(245, 240, 230, 0.07);
+    border-color: rgba(245, 240, 230, 0.1);
+  }
+
+  .lh-split-editor__label {
+    display: block;
+    font-size: 0.625rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--lh-ivory-muted);
+    margin-bottom: 0.35rem;
+    flex-shrink: 0;
+  }
+
+  .lh-split-editor__textarea {
+    flex: 1;
+    width: 100%;
+    min-height: 12rem;
+    resize: none;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: var(--lh-ivory);
+    caret-color: var(--lh-gold-light);
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.8125rem;
+    line-height: 1.65;
+  }
+
+  .lh-split-editor__textarea::selection {
+    background: rgba(212, 175, 55, 0.35);
+    color: var(--lh-ivory);
+  }
+
+  .lh-split-editor__textarea::placeholder {
+    color: rgba(245, 240, 230, 0.28);
+  }
+
+  .lh-split-editor__preview-scroll {
     flex: 1;
     min-height: 0;
+    overflow-y: auto;
+    padding-right: 0.25rem;
   }
 
-  .lh-editor-overlay .EasyMDEContainer .CodeMirror {
-    background: rgba(10, 10, 10, 0.85);
-    color: var(--lh-ivory);
-    border-color: var(--glass-border);
-    flex: 1;
-    min-height: 12rem;
-  }
+  @media (max-width: 900px) {
+    .lh-split-editor__shell {
+      flex-direction: column;
+      max-width: 720px;
+    }
 
-  .lh-editor-overlay .EasyMDEContainer .CodeMirror,
-  .lh-editor-overlay .EasyMDEContainer .CodeMirror-scroll {
-    height: auto !important;
-  }
-
-  .lh-editor-overlay .EasyMDEContainer .CodeMirror-fullscreen {
-    position: relative !important;
-    top: auto !important;
-    left: auto !important;
-    right: auto !important;
-    bottom: auto !important;
-    height: auto !important;
-    z-index: auto !important;
-  }
-
-  .lh-editor-overlay .editor-toolbar {
-    position: relative !important;
-    top: auto !important;
-    width: 100% !important;
-    background-color: var(--glass-bg-hover);
-    border-color: var(--glass-border);
-    z-index: 1;
-  }
-
-  .lh-editor-overlay .editor-toolbar.fullscreen {
-    position: relative !important;
-    height: auto !important;
-  }
-
-  .lh-editor-overlay .editor-toolbar button {
-    color: var(--lh-ivory-muted) !important;
-  }
-
-  .lh-editor-overlay .editor-toolbar button:hover,
-  .lh-editor-overlay .editor-toolbar button.active {
-    background-color: rgba(212, 175, 55, 0.15);
-    border-color: var(--glass-border-hover);
-  }
-
-  .lh-editor-overlay .editor-preview,
-  .lh-editor-overlay .editor-preview-side {
-    background: rgba(10, 10, 10, 0.75);
-    color: var(--lh-ivory-muted);
+    .lh-split-editor__preview {
+      flex: 0 0 auto;
+      width: 100%;
+      max-height: 40vh;
+    }
   }
 }
 

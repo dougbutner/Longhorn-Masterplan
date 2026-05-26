@@ -20,7 +20,6 @@
     "@wharfkit/wallet-plugin-anchor": "^1.4.0",
     "@wharfkit/web-renderer": "^1.4.0",
     "d3": "^7.9.0",
-    "easymde": "^2.21.0",
     "gray-matter": "^4.0.3",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

@@ -48,6 +48,15 @@ export function branchName(actor: string, nodeId: string): string {
   return `lh/${safeSegment(actor)}/${safeSegment(nodeId)}-${ts}`;
 }
 
+function editUrl(branch: string, filePath: string): string {
+  return `https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}/edit/${branch}/${filePath}`;
+}
+
+function compareUrl(branch: string, prTitle: string, prBody: string): string {
+  const params = new URLSearchParams({ expand: "1", title: prTitle, body: prBody });
+  return `https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}/compare/main...${branch}?${params.toString()}`;
+}
+
 interface RefResponse {
   object: { sha: string };
 }
@@ -56,12 +65,8 @@ interface ContentResponse {
   sha: string;
 }
 
-interface PullResponse {
-  html_url: string;
-  number: number;
-}
-
-export async function createPullRequestWithFile(opts: {
+/** Create a branch with the updated file; user finishes PR on GitHub compare / edit. */
+export async function createBranchWithFile(opts: {
   token: string;
   branch: string;
   filePath: string;
@@ -69,7 +74,7 @@ export async function createPullRequestWithFile(opts: {
   commitMessage: string;
   prTitle: string;
   prBody: string;
-}): Promise<{ prUrl: string; branch: string }> {
+}): Promise<{ branch: string; editUrl: string; compareUrl: string }> {
   const { token, branch, filePath, content, commitMessage, prTitle, prBody } = opts;
 
   const mainRef = await gh<RefResponse>(token, "/git/ref/heads/main");
@@ -101,15 +106,9 @@ export async function createPullRequestWithFile(opts: {
     }),
   });
 
-  const pr = await gh<PullResponse>(token, "/pulls", {
-    method: "POST",
-    body: JSON.stringify({
-      title: prTitle,
-      head: branch,
-      base: "main",
-      body: prBody,
-    }),
-  });
-
-  return { prUrl: pr.html_url, branch };
+  return {
+    branch,
+    editUrl: editUrl(branch, filePath),
+    compareUrl: compareUrl(branch, prTitle, prBody),
+  };
 }

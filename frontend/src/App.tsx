@@ -13,15 +13,21 @@ import { suggestNodePR, type SuggestPRResult } from "./lib/preparePr";
 import { applyClaimsToNodes, listLonghorns } from "./lib/owners";
 import planData from "./data/plan.json";
 import contributorsData from "./data/contributors.json";
+import { useContributors } from "./hooks/useContributors";
 import type { Contributors, PlanNode } from "./types";
 
 export default function App() {
   const nodes = planData as PlanNode[];
-  const contributors = contributorsData as Contributors;
+  const staticContributors = contributorsData as Contributors;
+  const { contributors, registerContributor } = useContributors(staticContributors);
   const rootId = useMemo(() => nodes.find((n) => n.parent === null)?.id ?? "longhorn", [nodes]);
 
   const { ready, info: session, signIn, signOut } = useSession();
   const { claims, claimNode } = useClaims();
+
+  useEffect(() => {
+    if (session?.actor) registerContributor(session.actor);
+  }, [session?.actor, registerContributor]);
   const { prs, loading: prsLoading, error: prsError, refresh: refreshPRs } = usePendingPRs(true);
 
   const [selectedId, setSelectedId] = useState<string | undefined>(rootId);
@@ -115,7 +121,6 @@ export default function App() {
         mode: "manual",
         editUrl: githubEditUrl(node.file),
         copied: false,
-        downloaded: false,
         message: `Could not start PR flow: ${e}`,
       });
     } finally {
