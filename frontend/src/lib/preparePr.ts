@@ -101,7 +101,7 @@ function openPopups(urls: { compare?: string; edit: string }): string {
   const compareWin = urls.compare
     ? window.open(urls.compare, "_blank", "noopener,noreferrer")
     : null;
-  if (!editWin && !compareWin) return "\n\nPop-ups blocked — use the buttons below.";
+  if (!editWin && !compareWin) return "";
   if (!editWin || !compareWin) return "\n\nOne tab was blocked — use the buttons below for any missing page.";
   return "";
 }
@@ -130,7 +130,6 @@ async function manualGitHubFlow(
     download: { filename: basename, content: markdown },
     message: [
       copiedLine + popupNote,
-      "GitHub cannot pre-fill the editor without server access.",
       "1. In the editor tab: paste (⌘V / Ctrl+V) over the file, then commit (fork if GitHub asks).",
       "2. Open the PR form tab and submit after your commit is on your branch.",
     ].join("\n"),
