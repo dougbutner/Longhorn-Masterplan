@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-
-const HORN_SRC = "/longhorn-horns.png";
+import { HORN_SRC } from "../lib/logo";
 const WOBBLE_MS = 550;
 const PAUSE_MS = 3000;
 
@@ -59,4 +58,4 @@ export function LonghornLogo({ className = "", alt = "Longhorn" }: Props) {
   );
 }
 
-export { HORN_SRC };
+export { HORN_SRC } from "../lib/logo";

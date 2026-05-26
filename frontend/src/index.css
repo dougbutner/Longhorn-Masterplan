@@ -377,9 +377,8 @@
 }
 
 @layer components {
-  /* Header logo — black backdrop blends away on dark UI */
   .lh-logo {
-    mix-blend-mode: lighten;
+    object-fit: contain;
   }
 
   @keyframes lh-logo-wobble {
@@ -414,6 +413,19 @@
     z-index: 1;
   }
 
+  /* Fullscreen map shell — keep site background inside native fullscreen */
+  .map-shell:fullscreen {
+    width: 100%;
+    height: 100%;
+    background-color: var(--lh-black);
+  }
+
+  .map-shell:-webkit-full-screen {
+    width: 100%;
+    height: 100%;
+    background-color: var(--lh-black);
+  }
+
   .lh-horn-accent__img {
     position: absolute;
     top: 50%;
@@ -422,8 +434,7 @@
     min-width: 1200px;
     max-width: none;
     height: auto;
-    opacity: 0.2;
-    mix-blend-mode: lighten;
+    opacity: 0.14;
     transform: translate(-50%, -50%);
     user-select: none;
   }
@@ -444,6 +455,24 @@
     }
   }
 
+  /* Progress map — center logo + chase-mode horn glow */
+  .map-root-chase .map-root-logo {
+    animation: map-horn-glow-pulse 1.35s ease-in-out infinite;
+  }
+
+  @keyframes map-horn-glow-pulse {
+    0%,
+    100% {
+      filter: drop-shadow(0 0 5px rgba(255, 50, 50, 0.45))
+        drop-shadow(0 0 14px rgba(255, 30, 30, 0.3));
+    }
+    50% {
+      filter: drop-shadow(0 0 12px rgba(255, 90, 90, 0.95))
+        drop-shadow(0 0 28px rgba(255, 40, 40, 0.7))
+        drop-shadow(0 0 42px rgba(200, 20, 20, 0.45));
+    }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .node-pulse {
       animation: none;
@@ -451,6 +480,11 @@
 
     .lh-logo--wobble {
       animation: none;
+    }
+
+    .map-root-chase .map-root-logo {
+      animation: none;
+      filter: drop-shadow(0 0 10px rgba(255, 60, 60, 0.65));
     }
 
     .lh-horn-accent {
