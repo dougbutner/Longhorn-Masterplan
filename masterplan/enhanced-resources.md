@@ -52,6 +52,10 @@ Douglas
 Idea: Signing paradigm within the contract (like tonomy) so contract can sign the transaction 
 Modifying the require_auth() to allow prelisted contracts to pay for resources or dual-signing 
 
+L2: Idea: Improve the storage format for the inline actions using lossless compression and alternative data format (JSON wastes characters that add up) 
+Radical Idea: Purge/ignore as much as we can after a period of time / contract, which would require additional resources to resurface into state but not leave the system. 
+Allow for RAM to be allocated to accounts and deployed in separate system (also helps idea of having RAM) so RAM can be sold and bought in one market, and deployed in another
+
 
 
 ## Final Solution Statement 
@@ -64,4 +68,9 @@ Modifying the require_auth() to allow prelisted contracts to pay for resources o
 
 ## Implementation Steps
 
+1. Stand up `eosio.subsidy` as a privileged contract.
+2. Implement `grant_free_tier(receiver, cpu_ms, net_bytes)` callable from `eosio.system::newaccount`.
+3. Token-bucket per account, refilled every block based on `set_curve(curve_id, params)`.
+4. Wire bucket lookup into CPU/NET accounting so contracts see "the user has some stake".
+5. BP vote action to update curves; no hard fork.
 
