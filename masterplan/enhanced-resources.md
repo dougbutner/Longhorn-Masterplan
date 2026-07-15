@@ -35,6 +35,8 @@ Problem: new chains need to fit into the current protocol resource model, making
 “Use it or lose it” incentivizes spamming to use unused resources over time. 
 Solution: Move protocol-level resource management into system contracts 
 Reconsider how we are storing state data 
+Paid TX model
+Disadvantage: Swings in gas price strange for UX
 Tradeoff of system contracts: Not as efficient as protocol in reading CPU and other resources in accounts. 
 
 
@@ -52,14 +54,27 @@ Douglas
 Idea: Signing paradigm within the contract (like tonomy) so contract can sign the transaction 
 Modifying the require_auth() to allow prelisted contracts to pay for resources or dual-signing 
 
-L2: Idea: Improve the storage format for the inline actions using lossless compression and alternative data format (JSON wastes characters that add up) 
-Radical Idea: Purge/ignore as much as we can after a period of time / contract, which would require additional resources to resurface into state but not leave the system. 
-Allow for RAM to be allocated to accounts and deployed in separate system (also helps idea of having RAM) so RAM can be sold and bought in one market, and deployed in another
+Kevin
+Testing Tiered solution 
 
-
+Mateo
+Exploring a POW / DPOS hybrid model 
+Looking at NExus.io model of utilizing older hardware, also BSV (a POW blockchain)
 
 ## Final Solution Statement 
 
+Concepts that can be molded
+Subjective Billing may be replaced by instruction-based billing to avoid usability / fairness issues 
+Bill for failed TXs 
+Introducing partial or full paid TX option
+Protocol level vs system contract resource management
+Tiered Resource system (Wire’s solution) 
+
+Charging more for NET to rectify BP’s overhead in delta-neutral TXs
+
+Option to prevent BP manipulation of source code through code-signing paradigm where BP + their code signs to ensure they are running authentic version of software
+
+Contract-pay: A non-abusable design where the contract pays for resources needed to call their actions (Is this first-signer, first-notified, etc?)
 
 
 ## Reference Contracts
@@ -73,4 +88,3 @@ Allow for RAM to be allocated to accounts and deployed in separate system (also 
 3. Token-bucket per account, refilled every block based on `set_curve(curve_id, params)`.
 4. Wire bucket lookup into CPU/NET accounting so contracts see "the user has some stake".
 5. BP vote action to update curves; no hard fork.
-
